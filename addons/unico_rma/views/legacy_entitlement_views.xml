@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_rma_legacy_entitlement_list" model="ir.ui.view">
+        <field name="name">rma.legacy.entitlement.list</field>
+        <field name="model">rma.legacy.entitlement</field>
+        <field name="arch" type="xml">
+            <list string="Imported Sage Sale Lines">
+                <field name="sage_invoice_ref"/>
+                <field name="sage_order_ref"/>
+                <field name="sage_line_ref"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <field name="qty_sold"/>
+                <field name="qty_returned"/>
+                <field name="qty_available"/>
+                <field name="price_unit"/>
+                <field name="unit_cost"/>
+                <field name="migration_cutoff_date"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_rma_legacy_entitlement_form" model="ir.ui.view">
+        <field name="name">rma.legacy.entitlement.form</field>
+        <field name="model">rma.legacy.entitlement</field>
+        <field name="arch" type="xml">
+            <form string="Imported Sage Sale Line">
+                <header>
+                    <button name="action_view_rma_lines" type="object" string="RMA Lines" class="btn-secondary" invisible="not id"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="sage_line_ref"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Original Sale">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="partner_id"/>
+                            <field name="product_id"/>
+                            <field name="sage_order_ref"/>
+                            <field name="sage_invoice_ref"/>
+                            <field name="invoice_date"/>
+                            <field name="migration_cutoff_date"/>
+                            <field name="imported_filename" readonly="1"/>
+                        </group>
+                        <group string="Return Quantity">
+                            <field name="qty_sold"/>
+                            <field name="qty_returned"/>
+                            <field name="qty_available" readonly="1"/>
+                            <field name="price_unit"/>
+                            <field name="unit_cost"/>
+                            <field name="refund_account_id"/>
+                            <field name="tax_code"/>
+                            <field name="tax_ids" widget="many2many_tags"/>
+                            <field name="lot_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="import_note" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_rma_legacy_entitlement_quick_form" model="ir.ui.view">
+        <field name="name">rma.legacy.entitlement.quick.form</field>
+        <field name="model">rma.legacy.entitlement</field>
+        <field name="arch" type="xml">
+            <form string="Create Sage Line">
+                <sheet>
+                    <group>
+                        <field name="company_id" invisible="1"/>
+                        <field name="partner_id" invisible="1"/>
+                        <field name="sage_order_ref" invisible="1"/>
+                        <field name="sage_invoice_ref" invisible="1"/>
+                        <field name="invoice_date" invisible="1"/>
+                        <field name="sage_line_ref" string="Sage Line ID"/>
+                        <field name="product_id"/>
+                        <field name="migration_cutoff_date" string="Verified in Sage On"/>
+                        <field name="qty_sold"/>
+                        <field name="qty_returned" string="Already Returned"/>
+                        <field name="price_unit"/>
+                        <field name="unit_cost"/>
+                        <field name="refund_account_id"/>
+                        <field name="tax_ids" widget="many2many_tags" string="Credit Tax"/>
+                        <field name="lot_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_rma_legacy_entitlement_search" model="ir.ui.view">
+        <field name="name">rma.legacy.entitlement.search</field>
+        <field name="model">rma.legacy.entitlement</field>
+        <field name="arch" type="xml">
+            <search string="Imported Sage Sale Lines">
+                <field name="sage_line_ref"/>
+                <field name="sage_invoice_ref"/>
+                <field name="sage_order_ref"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <filter name="available" string="Qty Left to Return" domain="[('qty_available', '&gt;', 0)]"/>
+                <filter name="group_customer" string="Customer" domain="[]" context="{'group_by': 'partner_id'}"/>
+                <filter name="group_product" string="Product" domain="[]" context="{'group_by': 'product_id'}"/>
+                <filter name="group_cutoff" string="Migration Cutoff Date" domain="[]" context="{'group_by': 'migration_cutoff_date'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_rma_legacy_entitlement" model="ir.actions.act_window">
+        <field name="name">Imported Sage Sale Lines</field>
+        <field name="res_model">rma.legacy.entitlement</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_available': 1}</field>
+    </record>
+
+    <record id="view_rma_legacy_entitlement_import_form" model="ir.ui.view">
+        <field name="name">rma.legacy.entitlement.import.form</field>
+        <field name="model">rma.legacy.entitlement.import</field>
+        <field name="arch" type="xml">
+            <form string="Import Sage Sale Lines">
+                <sheet>
+                    <group>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                        <field name="migration_cutoff_date"/>
+                        <field name="file_data" filename="filename"/>
+                        <field name="filename" invisible="1"/>
+                        <field name="update_existing"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_import" type="object" string="Import" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_rma_legacy_entitlement_import" model="ir.actions.act_window">
+        <field name="name">Import Sage Sale Lines</field>
+        <field name="res_model">rma.legacy.entitlement.import</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_rma_legacy_entitlement"
+        name="Imported Sage Sale Lines"
+        parent="menu_rma_order"
+        action="action_rma_legacy_entitlement"
+        sequence="30"/>
+
+    <menuitem id="menu_rma_legacy_entitlement_import"
+        name="Import Sage Sale Lines"
+        parent="menu_rma_order"
+        action="action_rma_legacy_entitlement_import"
+        sequence="31"/>
+</odoo>

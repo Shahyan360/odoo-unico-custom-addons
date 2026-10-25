@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- The dashboard banner itself. -->
+    <t t-name="unico_delivery.SaleDashboard">
+        <div class="o_sale_dashboard container-fluid py-3 border-bottom bg-view">
+            <div class="row g-2 text-center">
+                <div class="col">
+                    <a href="#" class="o_sale_dashboard_card"
+                       filter_name="filter_dashboard_delivery"
+                       t-on-click.prevent="setSearchContext">
+                        <span class="o_value" t-esc="saleData.delivery or 0"/>
+                        <span class="o_label">Delivery</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="#" class="o_sale_dashboard_card"
+                       filter_name="filter_dashboard_will_call"
+                       t-on-click.prevent="setSearchContext">
+                        <span class="o_value" t-esc="saleData.will_call or 0"/>
+                        <span class="o_label">Will Call / Pickup</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="#" class="o_sale_dashboard_card"
+                       filter_name="filter_dashboard_quotation"
+                       t-on-click.prevent="setSearchContext">
+                        <span class="o_value" t-esc="saleData.quotation or 0"/>
+                        <span class="o_label">Quotations</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="#" class="o_sale_dashboard_card"
+                       filter_name="filter_dashboard_sale_order"
+                       t-on-click.prevent="setSearchContext">
+                        <span class="o_value" t-esc="saleData.sale_order or 0"/>
+                        <span class="o_label">Sale Orders</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="#" class="o_sale_dashboard_card o_sale_dashboard_card_warn"
+                       filter_name="filter_dashboard_unpaid"
+                       t-on-click.prevent="setSearchContext">
+                        <span class="o_value" t-esc="saleData.unpaid or 0"/>
+                        <span class="o_label">Unpaid Orders</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="#" class="o_sale_dashboard_card o_sale_dashboard_card_ok"
+                       filter_name="filter_dashboard_paid"
+                       t-on-click.prevent="setSearchContext">
+                        <span class="o_value" t-esc="saleData.paid or 0"/>
+                        <span class="o_label">Paid Orders</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="#" class="o_sale_dashboard_card"
+                       filter_name="filter_dashboard_returned_credited"
+                       t-on-click.prevent="setSearchContext">
+                        <span class="o_value" t-esc="saleData.returned_credited or 0"/>
+                        <span class="o_label">Returned / Credited</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Inject the banner above the Sales Orders list. -->
+    <t t-name="unico_delivery.SaleListRenderer"
+       t-inherit="account.FileUploadListRenderer" t-inherit-mode="primary">
+        <xpath expr="//div[hasclass('o_list_renderer')]" position="before">
+            <SaleDashBoard list="props.list"/>
+        </xpath>
+    </t>
+
+    <!-- Inject the banner above the Quotations list (onboarding variant). -->
+    <t t-name="unico_delivery.SaleOnboardingListRenderer"
+       t-inherit="sale.SaleListRenderer" t-inherit-mode="primary">
+        <xpath expr="//div[hasclass('o_list_renderer')]" position="before">
+            <SaleDashBoard list="props.list"/>
+        </xpath>
+    </t>
+
+</templates>

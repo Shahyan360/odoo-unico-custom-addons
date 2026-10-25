@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_rma_main,access.rma.main,model_rma_main,base.group_user,1,1,1,1
+access_rma_lines,access.rma.lines,model_rma_lines,base.group_user,1,1,1,1
+access_rma_replace_order,access.rma.replace.order,model_rma_replace_order,base.group_user,1,1,1,1
+access_return_reason,access.return.reason,model_return_reason,base.group_user,1,1,1,1
+access_rma_claim,access.rma.claim,model_rma_claim,base.group_user,1,1,1,1
+access_rma_resolution,access.rma.resolution,model_rma_resolution,base.group_user,1,1,1,1
+access_return_order,access.return.order,model_return_order,base.group_user,1,1,1,1
+access_return_order_line,access.return.order.line,model_return_order_line,base.group_user,1,1,1,1
+access_return_replace_order,access.return.replace.order,model_return_replace_order,base.group_user,1,1,1,1
+access_rma_reject_wizard,access.rma.reject.wizard,model_rma_reject_wizard,base.group_user,1,1,1,1
+access_rma_legacy_entitlement_user,access.rma.legacy.entitlement.user,model_rma_legacy_entitlement,base.group_user,1,0,0,0
+access_rma_legacy_entitlement_manager,access.rma.legacy.entitlement.manager,model_rma_legacy_entitlement,sales_team.group_sale_manager,1,1,1,1
+access_rma_legacy_entitlement_import_manager,access.rma.legacy.entitlement.import.manager,model_rma_legacy_entitlement_import,sales_team.group_sale_manager,1,1,1,1

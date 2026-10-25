@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Surface the originating sale line's Purchase Note on the purchase line,
+         so purchasing sees the same sourcing guidance when deciding what to buy. -->
+    <record id="purchase_order_form_unico_purchase_note" model="ir.ui.view">
+        <field name="name">purchase.order.form.unico.purchase.note</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Order-line list: optional columns, hidden when empty. -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_qty']" position="after">
+                <field name="unico_purchase_note"
+                       string="Purchase Note"
+                       optional="show"
+                       readonly="1"/>
+                <field name="unico_purchase_cpq_note"
+                       string="CPQ Purchase Note"
+                       optional="show"
+                       readonly="1"/>
+            </xpath>
+
+            <!-- Order-line form dialog: show each note only when one exists. -->
+            <xpath expr="//field[@name='order_line']/form//field[@name='price_unit']" position="after">
+                <field name="unico_purchase_note"
+                       string="Purchase Note"
+                       readonly="1"
+                       invisible="not unico_purchase_note"/>
+                <field name="unico_purchase_cpq_note"
+                       string="CPQ Configuration Details"
+                       readonly="1"
+                       invisible="not unico_purchase_cpq_note"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

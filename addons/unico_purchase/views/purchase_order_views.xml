@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- RFQ / PO list: highlight sales-urgent rows + show the urgency level. -->
+    <record id="purchase_order_kpis_tree_urgency" model="ir.ui.view">
+        <field name="name">purchase.order.list.unico.urgency</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="arch" type="xml">
+            <list position="attributes">
+                <attribute name="decoration-danger">unico_urgency == 'overdue'</attribute>
+                <attribute name="decoration-warning">unico_urgency == 'urgent'</attribute>
+            </list>
+            <field name="amount_total" position="before">
+                <field name="unico_urgency" optional="hide"/>
+                <field name="unico_sale_order_status" widget="badge" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Search view: filters backing the dashboard urgency tiles + a group-by
+         on urgency. Each tile toggles the matching filter (by name) through the
+         searchModel, so these filters must stay visible/registered. Tile domains
+         and these filter domains match one-for-one. -->
+    <record id="view_purchase_order_filter_urgency" model="ir.ui.view">
+        <field name="name">purchase.order.search.unico.urgency</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.view_purchase_order_filter"/>
+        <field name="arch" type="xml">
+            <filter name="late_receipt" position="after">
+                <separator/>
+                <filter name="filter_urgency_overdue" string="Sales Overdue"
+                        domain="[('state', 'in', ['draft', 'sent', 'to approve', 'purchase']), ('unico_urgency', '=', 'overdue')]"/>
+                <filter name="filter_urgency_urgent" string="Sales Urgent"
+                        domain="[('state', 'in', ['draft', 'sent', 'to approve', 'purchase']), ('unico_urgency', '=', 'urgent')]"/>
+                <filter name="filter_urgency_normal" string="Sales Scheduled"
+                        domain="[('state', 'in', ['draft', 'sent', 'to approve', 'purchase']), ('unico_urgency', '=', 'normal')]"/>
+            </filter>
+            <filter name="vendor" position="before">
+                <filter name="group_by_unico_urgency" string="Sales Urgency"
+                        context="{'group_by': 'unico_urgency'}"/>
+                <filter name="group_by_unico_sale_link" string="Linked to Sales Order"
+                        context="{'group_by': 'unico_has_linked_sale'}"/>
+            </filter>
+            <!-- "Ready to Order" is applied by default on the RFQ action: the
+                 buyer opens onto demand that is actually orderable, with
+                 quotations, cancelled sales and Min/Max replenishment each one
+                 click away rather than clogging the list. -->
+            <filter name="my_purchases" position="before">
+                <filter name="filter_unico_sale_confirmed" string="Ready to Order (Confirmed Sale)"
+                        domain="[('unico_sale_order_status', '=', 'sale')]"/>
+                <filter name="filter_unico_sale_quotation" string="Quotation Only"
+                        domain="[('unico_sale_order_status', 'in', ['draft', 'sent'])]"/>
+                <filter name="filter_unico_sale_cancelled" string="Cancelled Sale"
+                        domain="[('unico_sale_order_status', '=', 'cancel')]"/>
+                <filter name="filter_unico_sale_none" string="No Linked Sales Order"
+                        domain="[('unico_has_linked_sale', '=', False)]"/>
+                <separator/>
+            </filter>
+        </field>
+    </record>
+
+    <!-- Same filters on the Purchase Orders search view (a different view from
+         the RFQ one), so the default below has something to resolve. -->
+    <record id="purchase_order_view_search_unico_linked_sale" model="ir.ui.view">
+        <field name="name">purchase.order.select.unico.linked.sale</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_view_search"/>
+        <field name="arch" type="xml">
+            <filter name="my_Orders" position="before">
+                <filter name="filter_unico_sale_confirmed" string="Ready to Order (Confirmed Sale)"
+                        domain="[('unico_sale_order_status', '=', 'sale')]"/>
+                <filter name="filter_unico_sale_quotation" string="Quotation Only"
+                        domain="[('unico_sale_order_status', 'in', ['draft', 'sent'])]"/>
+                <filter name="filter_unico_sale_cancelled" string="Cancelled Sale"
+                        domain="[('unico_sale_order_status', '=', 'cancel')]"/>
+                <filter name="filter_unico_sale_none" string="No Linked Sales Order"
+                        domain="[('unico_has_linked_sale', '=', False)]"/>
+                <separator/>
+            </filter>
+            <filter name="vendor" position="before">
+                <filter name="group_by_unico_sale_link" string="Linked to Sales Order"
+                        context="{'group_by': 'unico_has_linked_sale'}"/>
+            </filter>
+        </field>
+    </record>
+
+    <!-- Default the Purchase lists to purchases whose demand is a confirmed
+         sale. The core context is restated in full because assigning it
+         replaces the original. -->
+    <record id="purchase.purchase_rfq" model="ir.actions.act_window">
+        <field name="context">{'quotation_only': True, 'search_default_filter_unico_sale_confirmed': 1}</field>
+    </record>
+
+    <record id="purchase.purchase_form_action" model="ir.actions.act_window">
+        <field name="context">{'search_default_filter_unico_sale_confirmed': 1}</field>
+    </record>
+
+    <record id="action_unico_merge_rfqs" model="ir.actions.server">
+        <field name="name">Merge RFQs (Preserve Distinct Lines)</field>
+        <field name="model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_view_types">list</field>
+        <field name="group_ids" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+        <field name="state">code</field>
+        <field name="sequence">2</field>
+        <field name="code">
+            if records:
+                action = records.action_unico_merge()
+        </field>
+    </record>
+
+</odoo>

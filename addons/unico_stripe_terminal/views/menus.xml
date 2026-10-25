@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_stripe_terminal_root"
+              name="Stripe Terminal"
+              parent="sale.sale_menu_root"
+              sequence="90"
+              groups="unico_stripe_terminal.group_stripe_terminal_user"/>
+
+    <menuitem id="menu_stripe_terminal_payment"
+              name="Terminal Payments"
+              parent="menu_stripe_terminal_root"
+              action="stripe_terminal_payment_action"
+              sequence="10"/>
+
+    <menuitem id="menu_stripe_terminal_reader"
+              name="Readers"
+              parent="menu_stripe_terminal_root"
+              action="stripe_terminal_reader_action"
+              sequence="20"
+              groups="unico_stripe_terminal.group_stripe_terminal_manager"/>
+
+    <menuitem id="menu_stripe_terminal_location"
+              name="Locations"
+              parent="menu_stripe_terminal_root"
+              action="stripe_terminal_location_action"
+              sequence="30"
+              groups="unico_stripe_terminal.group_stripe_terminal_manager"/>
+
+    <menuitem id="menu_stripe_terminal_providers"
+              name="Payment Providers"
+              parent="menu_stripe_terminal_root"
+              action="payment.action_payment_provider"
+              sequence="40"
+              groups="unico_stripe_terminal.group_stripe_terminal_manager"/>
+
+</odoo>

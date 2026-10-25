@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The default lifecycle ladder. These are ordinary records: rename them,
+         reorder them, or add your own from Sales > Configuration > WIP Stages.
+         `auto_token` is what wires a stage to the automatic detector — a stage
+         with no token is manual-only (you can drag onto it, the detector will
+         never move an order there by itself). noupdate so an upgrade never
+         stomps on stages the business has since retitled or resequenced. -->
+    <data noupdate="1">
+
+        <record id="wip_stage_confirmed" model="unico.wip.stage">
+            <field name="name">Order Confirmed</field>
+            <field name="sequence">10</field>
+            <field name="auto_token">confirmed</field>
+            <field name="description">Confirmed, nothing purchased or shipped yet</field>
+        </record>
+
+        <record id="wip_stage_purchasing" model="unico.wip.stage">
+            <field name="name">Purchasing</field>
+            <field name="sequence">20</field>
+            <field name="auto_token">purchasing</field>
+            <field name="description">An RFQ is still sitting with the supplier</field>
+        </record>
+
+        <record id="wip_stage_shipping" model="unico.wip.stage">
+            <field name="name">Supplier Shipping</field>
+            <field name="sequence">30</field>
+            <field name="auto_token">shipping</field>
+            <field name="description">Ordered, goods not all arrived</field>
+        </record>
+
+        <record id="wip_stage_receipt" model="unico.wip.stage">
+            <field name="name">Goods Received</field>
+            <field name="sequence">40</field>
+            <field name="auto_token">receipt</field>
+            <field name="description">Everything in, nothing out to the customer yet</field>
+        </record>
+
+        <record id="wip_stage_delivery" model="unico.wip.stage">
+            <field name="name">Out for Delivery</field>
+            <field name="sequence">50</field>
+            <field name="auto_token">delivery</field>
+            <field name="description">On its way to the customer</field>
+        </record>
+
+        <!-- Manual-only parking stage: no auto_token, so the detector never
+             places an order here — but ops can pin one that is genuinely stuck
+             outside the normal ladder (customs, credit hold, customer pause). -->
+        <record id="wip_stage_on_hold" model="unico.wip.stage">
+            <field name="name">On Hold</field>
+            <field name="sequence">60</field>
+            <field name="fold" eval="True"/>
+            <field name="description">Parked by hand — outside the normal flow</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Sales negotiates a figure for the whole line, not a unit price. The
+         button sits beside the line total it edits; price_subtotal itself
+         stays computed so margin keeps following Odoo's own compute chain.
+
+         It is a widget rather than a <button type="object"> because Odoo
+         refuses object buttons on an x2many row that has never been saved.
+         The widget saves the quotation itself instead of telling the rep to. -->
+    <record id="view_order_form_unico_line_total" model="ir.ui.view">
+        <field name="name">sale.order.form.unico.line.total</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list/field[@name='price_subtotal']" position="after">
+                <widget name="unico_line_total_button"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

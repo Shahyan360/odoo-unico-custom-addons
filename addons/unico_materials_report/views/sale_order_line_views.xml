@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Line-grain breakdown: each waiting line with the specific product /
+         configured door / special door and what it is waiting on. -->
+    <record id="view_unico_waiting_materials_line_list" model="ir.ui.view">
+        <field name="name">sale.order.line.list.unico.waiting.materials</field>
+        <field name="model">sale.order.line</field>
+        <field name="arch" type="xml">
+            <list string="Lines Waiting on Materials" create="false">
+                <field name="order_id" string="Order"/>
+                <field name="order_partner_id" string="Customer" optional="show"/>
+                <field name="product_id"/>
+                <field name="product_uom_qty" string="Ordered"/>
+                <field name="qty_to_deliver" string="To Deliver" optional="show"/>
+                <field name="unico_material_wait_label" string="Waiting On"/>
+                <field name="is_configurable" optional="hide"/>
+                <field name="is_special_order_product" optional="hide"/>
+                <field name="unico_material_wait_reasons" column_invisible="1"/>
+                <field name="unico_material_waiting" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_unico_waiting_materials_line_search" model="ir.ui.view">
+        <field name="name">sale.order.line.search.unico.waiting.materials</field>
+        <field name="model">sale.order.line</field>
+        <field name="arch" type="xml">
+            <search string="Lines Waiting on Materials">
+                <field name="order_id" string="Order"/>
+                <field name="product_id"/>
+                <field name="order_partner_id" string="Customer"/>
+                <filter name="line_waiting" string="Waiting on Materials"
+                        domain="[('unico_material_waiting', '=', True)]"/>
+                <separator/>
+                <filter name="line_stock" string="Awaiting Stock"
+                        domain="[('unico_material_wait_reasons', 'ilike', 'stock')]"/>
+                <filter name="line_purchase" string="Awaiting Purchase"
+                        domain="[('unico_material_wait_reasons', 'ilike', 'purchase')]"/>
+                <filter name="line_manufacturing" string="Awaiting Manufacturing"
+                        domain="[('unico_material_wait_reasons', 'ilike', 'manufacturing')]"/>
+                <group>
+                    <filter name="group_by_reason" string="Waiting On"
+                            context="{'group_by': 'unico_material_wait_reasons'}"/>
+                    <filter name="group_by_order" string="Order"
+                            context="{'group_by': 'order_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

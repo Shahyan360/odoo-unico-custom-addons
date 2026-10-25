@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_order_list_unico_ach_pending" model="ir.ui.view">
+        <field name="name">sale.order.list.unico.ach.pending</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <list string="ACH Awaiting Clearance"
+                  default_order="unico_ach_pending_since asc"
+                  create="false">
+                <field name="name" string="Order"/>
+                <field name="partner_id"/>
+                <field name="unico_ach_pending_since" string="ACH Submitted"/>
+                <field name="unico_ach_days_pending" string="Days"
+                       decoration-danger="unico_ach_days_pending &gt;= 7"
+                       decoration-warning="unico_ach_days_pending &gt;= 4"/>
+                <field name="unico_ach_pending_amount" sum="Not Cleared"/>
+                <field name="amount_total" optional="show"/>
+                <field name="delivery_status" widget="badge" optional="show"/>
+                <field name="invoice_status" optional="hide"/>
+                <field name="user_id" optional="show"/>
+                <field name="state" widget="badge" optional="hide"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sales_order_filter_unico_ach" model="ir.ui.view">
+        <field name="name">sale.order.search.unico.ach</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <search string="ACH Awaiting Clearance">
+                <field name="name" string="Order"/>
+                <field name="partner_id"/>
+                <field name="user_id"/>
+                <filter name="ach_uncleared" string="ACH Not Cleared"
+                        domain="[('unico_ach_pending_amount', '&gt;', 0)]"/>
+                <filter name="ach_over_a_week" string="Pending 7+ Days"
+                        domain="[('unico_ach_pending_since', '&lt;=', '-7d')]"/>
+                <separator/>
+                <filter name="undelivered" string="Not Delivered"
+                        domain="[('delivery_status', '!=', 'full')]"/>
+                <group>
+                    <filter name="group_by_partner" string="Customer"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_by_salesperson" string="Salesperson"
+                            context="{'group_by': 'user_id'}"/>
+                    <filter name="group_by_delivery" string="Delivery Status"
+                            context="{'group_by': 'delivery_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_unico_ach_pending_orders" model="ir.actions.act_window">
+        <field name="name">ACH Awaiting Clearance</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('unico_ach_pending_amount', '&gt;', 0)]</field>
+        <field name="search_view_id" ref="view_sales_order_filter_unico_ach"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiley_face">
+                No ACH payments are waiting to clear.
+            </p>
+            <p>
+                Orders appear here from the moment an ACH Direct Debit payment is
+                started until Stripe confirms it, which usually takes 4-5 business
+                days. Once the payment clears, the order drops off this list.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_unico_ach_pending_orders_list_view" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_order_list_unico_ach_pending"/>
+        <field name="act_window_id" ref="action_unico_ach_pending_orders"/>
+    </record>
+
+    <menuitem id="menu_unico_ach_pending_orders"
+              name="ACH Awaiting Clearance"
+              parent="sale.sale_order_menu"
+              action="action_unico_ach_pending_orders"
+              groups="sales_team.group_sale_salesman"
+              sequence="25"/>
+
+</odoo>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="unico_payment_multiple_invoices.LineTotalButton">
+        <button t-if="isAvailable"
+                type="button"
+                class="btn btn-link o_unico_line_total_button p-0"
+                title="Set Line Total: enter a negotiated total and let Odoo derive Unit Price and margin"
+                t-on-click.stop="onClick">
+            <i class="fa fa-calculator" role="img" aria-label="Set Line Total"/>
+        </button>
+    </t>
+
+</templates>

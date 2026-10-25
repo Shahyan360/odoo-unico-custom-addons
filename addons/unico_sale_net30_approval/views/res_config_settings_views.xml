@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form_unico_net30" model="ir.ui.view">
+        <field name="name">res.config.settings.form.unico.net30</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='invoicing_settings']" position="inside">
+                <setting id="unico_auto_send_net30_invoices"
+                         string="Auto-send Net 30 Invoices"
+                         help="Email the invoice to the customer the moment it is validated, whenever its payment term is a Net 30 term. The mail carries the invoice PDF and a button to view and pay it on the portal. Independent of the general Automatic Customer Emails switch in Sales settings.">
+                    <field name="unico_auto_send_net30_invoices"/>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

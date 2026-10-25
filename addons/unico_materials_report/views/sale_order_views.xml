@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Order-grain (primary): confirmed orders waiting on materials.
+         Printable / exportable via the standard list print + export. -->
+    <record id="view_unico_waiting_materials_order_list" model="ir.ui.view">
+        <field name="name">sale.order.list.unico.waiting.materials</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <list string="Orders Waiting on Materials" create="false"
+                  decoration-danger="unico_material_urgency == 'overdue'"
+                  decoration-warning="unico_material_urgency == 'urgent'">
+                <field name="name" string="Order"/>
+                <field name="partner_id"/>
+                <field name="commitment_date"/>
+                <field name="unico_material_urgency"/>
+                <field name="unico_material_blocking_label" string="Waiting On"/>
+                <field name="unico_waiting_line_count" string="Waiting Lines"/>
+                <field name="amount_total" sum="Total"/>
+                <field name="user_id" optional="hide"/>
+                <field name="state" optional="hide"/>
+                <field name="unico_material_blocking_reasons" column_invisible="1"/>
+                <field name="unico_waiting_on_materials" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search: filters that back the dashboard tiles (kept named so the tiles
+         can drill down to matching domains) + group-bys. -->
+    <record id="view_unico_waiting_materials_order_search" model="ir.ui.view">
+        <field name="name">sale.order.search.unico.waiting.materials</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <search string="Orders Waiting on Materials">
+                <field name="name" string="Order"/>
+                <field name="partner_id"/>
+                <field name="user_id"/>
+                <filter name="waiting_on_materials" string="Waiting on Materials"
+                        domain="[('unico_waiting_on_materials', '=', True)]"/>
+                <separator/>
+                <filter name="material_overdue" string="Overdue"
+                        domain="[('unico_waiting_on_materials', '=', True), ('unico_material_urgency', '=', 'overdue')]"/>
+                <filter name="material_urgent" string="Urgent"
+                        domain="[('unico_waiting_on_materials', '=', True), ('unico_material_urgency', '=', 'urgent')]"/>
+                <filter name="material_scheduled" string="Scheduled"
+                        domain="[('unico_waiting_on_materials', '=', True), ('unico_material_urgency', '=', 'scheduled')]"/>
+                <separator/>
+                <filter name="reason_stock" string="Awaiting Stock"
+                        domain="[('unico_material_blocking_reasons', 'ilike', 'stock')]"/>
+                <filter name="reason_purchase" string="Awaiting Purchase"
+                        domain="[('unico_material_blocking_reasons', 'ilike', 'purchase')]"/>
+                <filter name="reason_manufacturing" string="Awaiting Manufacturing"
+                        domain="[('unico_material_blocking_reasons', 'ilike', 'manufacturing')]"/>
+                <group>
+                    <filter name="group_by_material_urgency" string="Material Urgency"
+                            context="{'group_by': 'unico_material_urgency'}"/>
+                    <filter name="group_by_customer" string="Customer"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_by_salesperson" string="Salesperson"
+                            context="{'group_by': 'user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

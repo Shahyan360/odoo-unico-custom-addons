@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- PO Detail sits directly under Payment Terms: both are the customer's
+         billing conditions, and that is where a salesperson is already looking
+         when they set the order up. -->
+    <record id="sale_order_form_po_detail" model="ir.ui.view">
+        <field name="name">sale.order.form.unico.po-detail</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="unico_po_required" invisible="1"/>
+                <field name="unico_po_detail"
+                       required="unico_po_required and state in ('draft', 'sent')"
+                       placeholder="Customer PO number"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Surfaced on the list so orders still waiting on a PO can be spotted
+         without opening each one. -->
+    <record id="sale_order_tree_po_detail" model="ir.ui.view">
+        <field name="name">sale.order.list.unico.po-detail</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.sale_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="unico_po_detail" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

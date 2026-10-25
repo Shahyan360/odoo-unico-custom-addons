@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_unico_line_total_wizard_form" model="ir.ui.view">
+        <field name="name">unico.line.total.wizard.form</field>
+        <field name="model">unico.line.total.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Set Line Total">
+                <field name="order_line_id" invisible="1"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="current_discount" invisible="1"/>
+                <sheet>
+                    <group>
+                        <group string="Current">
+                            <field name="product_uom_qty"/>
+                            <field name="current_price_unit" widget="monetary"/>
+                            <field name="current_subtotal" widget="monetary"/>
+                            <field name="current_margin" widget="monetary"/>
+                            <field name="current_margin_percent" widget="percentage"/>
+                        </group>
+                        <group string="New">
+                            <field name="target_subtotal" widget="monetary"/>
+                            <field name="new_price_unit" widget="monetary" readonly="1"/>
+                            <field name="new_margin" widget="monetary" readonly="1"/>
+                            <field name="new_margin_percent" widget="percentage" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <div class="alert alert-info" role="alert" invisible="not rounding_notice">
+                        <field name="rounding_notice" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <div class="alert alert-warning" role="alert"
+                         invisible="current_discount == 0">
+                        Applying a line total clears the <strong>Discount %</strong> on this
+                        line so the entered total is the exact pre-tax charge.
+                    </div>
+                </sheet>
+                <footer>
+                    <button string="Apply" name="action_apply" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

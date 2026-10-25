@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inventory Operations list: show the fulfillment type and the real delivery /
+         pickup address so Will Call pickups are visible at a glance. -->
+    <record id="vpicktree_unico_fulfillment" model="ir.ui.view">
+        <field name="name">stock.picking.list.unico.fulfillment</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="fulfillment_type" optional="show"/>
+                <field name="unico_delivery_address_display" optional="show"/>
+                <field name="unico_original_print_date" optional="show"/>
+                <field name="unico_last_print_date" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

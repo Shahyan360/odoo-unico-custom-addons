@@ -1,0 +1,6 @@
+[options]
+addons_path = /path/to/odoo/addons,/path/to/this/repo/addons
+db_host = localhost
+db_port = 5432
+db_user = YOUR_LOCAL_DATABASE_USER
+; Set passwords only in an ignored local odoo.conf.

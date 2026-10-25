@@ -1,0 +1,1836 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="unico_financial_dashboard.FinancialDashboard">
+        <div class="o_action o_unico_financial_dashboard">
+            <ControlPanel>
+                <t t-set-slot="layout-buttons">
+                    <button type="button"
+                            class="btn btn-primary"
+                            t-on-click="refresh"
+                            t-att-disabled="!canRefreshReport"
+                            t-att-title="refreshButtonTitle">Refresh Report</button>
+                    <span t-if="hasInvalidReportFilters"
+                          class="o_unico_report_filter_state o_unico_report_filter_state_invalid">Check date range</span>
+                    <span t-elif="hasPendingReportChanges"
+                          class="o_unico_report_filter_state">Pending changes</span>
+                </t>
+                <t t-set-slot="layout-actions">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <label class="text-muted mb-0" for="unico_financial_range_preset">Range</label>
+                        <select id="unico_financial_range_preset"
+                                class="form-select form-select-sm w-auto"
+                                t-att-disabled="state.loading"
+                                t-on-change="onRangePresetChange">
+                            <option value="default" t-att-selected="state.rangePreset === 'default'">Last 8 Complete + Current</option>
+                            <option value="past_day" t-att-selected="state.rangePreset === 'past_day'">Past Day</option>
+                            <option value="past_week" t-att-selected="state.rangePreset === 'past_week'">Past Week</option>
+                            <option value="past_month" t-att-selected="state.rangePreset === 'past_month'">Past Month</option>
+                            <option value="year_to_date" t-att-selected="state.rangePreset === 'year_to_date'">Year to Date</option>
+                            <option value="past_year" t-att-selected="state.rangePreset === 'past_year'">Past Year</option>
+                            <option value="custom" t-att-selected="state.rangePreset === 'custom'">Custom Dates</option>
+                        </select>
+                        <label class="text-muted mb-0" for="unico_financial_date_start">Report Start</label>
+                        <input id="unico_financial_date_start" type="date"
+                               class="form-control form-control-sm w-auto"
+                               t-att-value="state.dateStart"
+                               t-att-disabled="state.loading"
+                               t-on-change="onDateStartChange"/>
+                        <label class="text-muted mb-0" for="unico_financial_date_end">Report End</label>
+                        <input id="unico_financial_date_end" type="date"
+                               class="form-control form-control-sm w-auto"
+                               t-att-value="state.dateEnd"
+                               t-att-disabled="state.loading"
+                               t-on-change="onDateEndChange"/>
+                        <label class="text-muted mb-0" for="unico_financial_comparison_mode">Compare</label>
+                        <select id="unico_financial_comparison_mode"
+                                class="form-select form-select-sm w-auto"
+                                t-att-disabled="state.loading"
+                                t-on-change="onComparisonModeChange">
+                            <option value="prior_period" t-att-selected="state.comparisonMode === 'prior_period'">Prior period</option>
+                            <option value="same_period_last_year" t-att-selected="state.comparisonMode === 'same_period_last_year'">Same period last year</option>
+                            <option value="custom" t-att-selected="state.comparisonMode === 'custom'">Custom dates</option>
+                        </select>
+                        <t t-if="state.comparisonMode === 'custom'">
+                            <label class="text-muted mb-0" for="unico_financial_comparison_start">Compare Start</label>
+                            <input id="unico_financial_comparison_start" type="date"
+                                   class="form-control form-control-sm w-auto"
+                                   t-att-value="state.comparisonStart"
+                                   t-att-disabled="state.loading"
+                                   t-on-change="onComparisonStartChange"/>
+                            <label class="text-muted mb-0" for="unico_financial_comparison_end">Compare End</label>
+                            <input id="unico_financial_comparison_end" type="date"
+                                   class="form-control form-control-sm w-auto"
+                                   t-att-value="state.comparisonEnd"
+                                   t-att-disabled="state.loading"
+                                   t-on-change="onComparisonEndChange"/>
+                        </t>
+                        <button t-if="state.comparisonMode !== 'prior_period'" type="button"
+                                class="btn btn-secondary btn-sm"
+                                t-on-click="resetComparison"
+                                t-att-disabled="state.loading">Use Prior Period</button>
+                        <button t-if="state.rangePreset !== 'default'" type="button"
+                                class="btn btn-secondary btn-sm"
+                                t-on-click="resetRange"
+                                t-att-disabled="state.loading">Reset Range</button>
+                    </div>
+                </t>
+            </ControlPanel>
+            <div class="o-content overflow-auto o_unico_financial_content">
+                <t t-if="state.loading">
+                    <div class="o_unico_financial_loading">Loading financial KPIs...</div>
+                </t>
+                <t t-else="">
+                    <div class="o_unico_financial_header">
+                        <div>
+                            <h1>Financial KPI Dashboard</h1>
+                            <p>Week-over-week accounting view for <t t-esc="dashboard.company.name"/>.</p>
+                        </div>
+                        <div class="o_unico_financial_generated">
+                            <t t-esc="summaryContext.generated_label || ('Generated ' + dashboard.generated_at)"/>
+                        </div>
+                    </div>
+
+                    <div class="o_unico_financial_layout">
+                        <aside class="o_unico_financial_sidebar" aria-label="Dashboard sections">
+                            <span>Jump to</span>
+                            <t t-foreach="sidebarSections" t-as="section" t-key="section.id">
+                                <button type="button"
+                                        class="o_unico_sidebar_link"
+                                        t-on-click="() => this.scrollToSection(section.id)">
+                                    <t t-esc="section.label"/>
+                                </button>
+                            </t>
+                        </aside>
+
+                        <main class="o_unico_financial_main">
+                            <section id="unico_financial_overview" class="o_unico_financial_overview">
+                                <div class="o_unico_period_summary">
+                                    <div class="o_unico_period_item">
+                                        <span>Date range metrics</span>
+                                        <strong t-esc="summaryContext.range_dates"/>
+                                    </div>
+                                    <div class="o_unico_period_item">
+                                        <span>Reporting weeks</span>
+                                        <strong>
+                                            <t t-esc="summaryContext.week_count_label"/>
+                                            <small t-esc="summaryContext.reporting_week_label"/>
+                                        </strong>
+                                    </div>
+                                    <div class="o_unico_period_item">
+                                        <span>Comparison period</span>
+                                        <strong t-esc="summaryContext.comparison_dates"/>
+                                    </div>
+                                    <div class="o_unico_period_item">
+                                        <span>Snapshot metrics</span>
+                                        <strong t-esc="summaryContext.snapshot_label"/>
+                                    </div>
+                                    <div t-if="summaryContext.partial" class="o_unico_period_item o_unico_period_item_warning">
+                                        <span>Partial week</span>
+                                        <strong t-esc="summaryContext.partial_label"/>
+                                    </div>
+                                </div>
+
+                                <div class="o_unico_financial_cards">
+                                    <t t-foreach="dashboard.summary_cards || []" t-as="card" t-key="card.label">
+                                        <button type="button"
+                                                class="o_unico_financial_card"
+                                                t-on-click="() => this.openSummaryCard(card)"
+                                                t-att-disabled="!isSummaryCardActionable(card)"
+                                                t-att-title="cardTitle(card)">
+                                            <span class="o_unico_financial_card_label">
+                                                <span t-esc="card.label"/>
+                                                <span t-if="metricDefinition(card.metric_key)"
+                                                      class="o_unico_metric_help"
+                                                      t-att-title="metricTitle(card.metric_key)"
+                                                      aria-label="Metric calculation">?</span>
+                                            </span>
+                                            <span t-if="card.context_label" class="o_unico_financial_card_context" t-esc="card.context_label"/>
+                                            <span t-if="card.period_label" class="o_unico_financial_card_period" t-esc="card.period_label"/>
+                                            <strong t-esc="formatValue(card.value, card.value_type)"/>
+                                            <span t-attf-class="o_unico_financial_delta #{deltaClass(card)}">
+                                                <t t-esc="cardDeltaText(card)"/>
+                                            </span>
+                                        </button>
+                                    </t>
+                                </div>
+                            </section>
+
+                            <section id="unico_financial_open_sales_orders" class="o_unico_financial_section">
+                                <div class="o_unico_financial_section_header">
+                                    <div>
+                                        <h2>Sales Orders (Open)</h2>
+                                        <p class="o_unico_trend_range">
+                                            Rolling 30-day sale order view from
+                                            <t t-esc="(dashboard.open_sales_order_kpis || {}).window_label"/>.
+                                            Open metrics include confirmed orders that are still open.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="o_unico_financial_cards">
+                                    <t t-foreach="(dashboard.open_sales_order_kpis || {}).cards || []" t-as="kpi" t-key="kpi.label">
+                                        <button type="button"
+                                                class="o_unico_financial_card"
+                                                t-att-title="kpi.definition"
+                                                t-on-click="() => this.openDrilldown(kpi.drilldown, kpi.label)"
+                                                t-att-disabled="!kpi.drilldown || !kpi.drilldown.model">
+                                            <span class="o_unico_financial_card_label">
+                                                <span t-esc="kpi.label"/>
+                                                <span t-if="kpi.definition"
+                                                      class="o_unico_metric_help"
+                                                      t-att-title="kpi.definition"
+                                                      aria-label="Metric calculation">?</span>
+                                            </span>
+                                            <span class="o_unico_financial_card_context">Last 30 days</span>
+                                            <strong t-esc="formatValue(kpi.value, kpi.value_type)"/>
+                                        </button>
+                                    </t>
+                                </div>
+                            </section>
+
+                            <section id="unico_financial_sales_conversion"
+                                     class="o_unico_financial_section o_unico_conversion_section">
+                                <div class="o_unico_financial_section_header">
+                                    <div>
+                                        <h2>Sales Conversion by Fulfillment</h2>
+                                        <p class="o_unico_trend_range">
+                                            Quotation cohorts created during
+                                            <t t-esc="(dashboard.fulfillment_conversion || {}).range_label"/>,
+                                            compared with
+                                            <t t-esc="(dashboard.fulfillment_conversion || {}).comparison_label"/>.
+                                            Outcomes reflect current status as of the dashboard refresh.
+                                        </p>
+                                    </div>
+                                </div>
+                                <t t-set="fulfillment_conversion"
+                                   t-value="dashboard.fulfillment_conversion || {}"/>
+                                <t t-set="conversion_total"
+                                   t-value="fulfillment_conversion.current_total || {}"/>
+                                <t t-if="(conversion_total.current_cohort_count || 0) || (conversion_total.comparison_cohort_count || 0)">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm o_unico_financial_table o_unico_conversion_table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Fulfillment Type</th>
+                                                    <th class="text-end">
+                                                        <span class="o_unico_conversion_header">
+                                                            <span>Quotes Created</span>
+                                                            <small>Orders / Untaxed value</small>
+                                                        </span>
+                                                    </th>
+                                                    <th class="text-end">
+                                                        <span class="o_unico_conversion_header">
+                                                            <span>Confirmed Sales</span>
+                                                            <small>Orders / Untaxed value</small>
+                                                        </span>
+                                                    </th>
+                                                    <th class="text-end">
+                                                        <span class="o_unico_conversion_header">
+                                                            <span>Paid Sales</span>
+                                                            <small>Orders / Untaxed value</small>
+                                                        </span>
+                                                    </th>
+                                                    <th class="text-end">Quote to Sale</th>
+                                                    <th class="text-end">Sale to Paid</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="fulfillment_conversion.rows || []" t-as="row" t-key="row.id">
+                                                    <tr>
+                                                        <td t-esc="row.label"/>
+                                                        <td class="text-end">
+                                                            <div class="o_unico_conversion_metric">
+                                                                <button type="button"
+                                                                        class="o_unico_table_value_button"
+                                                                        t-att-disabled="!row.current_cohort_drilldown || !row.current_cohort_drilldown.model"
+                                                                        t-on-click="() => this.openDrilldown(row.current_cohort_drilldown, 'Quotation Cohort - ' + row.label)"
+                                                                        t-esc="formatNumber(row.current_cohort_count)"/>
+                                                                <button type="button"
+                                                                        class="o_unico_table_value_button o_unico_conversion_amount"
+                                                                        t-att-disabled="!row.current_cohort_drilldown || !row.current_cohort_drilldown.model"
+                                                                        t-on-click="() => this.openDrilldown(row.current_cohort_drilldown, 'Quotation Cohort - ' + row.label)"
+                                                                        t-esc="formatMoney(row.current_quote_sales)"/>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <div class="o_unico_conversion_metric">
+                                                                <button type="button"
+                                                                        class="o_unico_table_value_button"
+                                                                        t-att-disabled="!row.current_confirmed_drilldown || !row.current_confirmed_drilldown.model"
+                                                                        t-on-click="() => this.openDrilldown(row.current_confirmed_drilldown, 'Confirmed Sales - ' + row.label)"
+                                                                        t-esc="formatNumber(row.current_confirmed_count)"/>
+                                                                <button type="button"
+                                                                        class="o_unico_table_value_button o_unico_conversion_amount"
+                                                                        t-att-disabled="!row.current_confirmed_drilldown || !row.current_confirmed_drilldown.model"
+                                                                        t-on-click="() => this.openDrilldown(row.current_confirmed_drilldown, 'Confirmed Sales - ' + row.label)"
+                                                                        t-esc="formatMoney(row.current_confirmed_sales)"/>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <div class="o_unico_conversion_metric">
+                                                                <button type="button"
+                                                                        class="o_unico_table_value_button"
+                                                                        t-att-disabled="!row.current_paid_drilldown || !row.current_paid_drilldown.model"
+                                                                        t-on-click="() => this.openDrilldown(row.current_paid_drilldown, 'Paid Sales - ' + row.label)"
+                                                                        t-esc="formatNumber(row.current_paid_count)"/>
+                                                                <button type="button"
+                                                                        class="o_unico_table_value_button o_unico_conversion_amount"
+                                                                        t-att-disabled="!row.current_paid_drilldown || !row.current_paid_drilldown.model"
+                                                                        t-on-click="() => this.openDrilldown(row.current_paid_drilldown, 'Paid Sales - ' + row.label)"
+                                                                        t-esc="formatMoney(row.current_paid_sales)"/>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <div class="o_unico_conversion_rate">
+                                                                <button type="button"
+                                                                        class="o_unico_table_value_button o_unico_conversion_rate_value"
+                                                                        t-att-disabled="!row.current_confirmed_drilldown || !row.current_confirmed_drilldown.model"
+                                                                        t-on-click="() => this.openDrilldown(row.current_confirmed_drilldown, 'Quote to Sale - ' + row.label)"
+                                                                        t-esc="formatPercent(row.current_quote_to_sale_rate)"/>
+                                                                <small>
+                                                                    Comparison
+                                                                    <button type="button"
+                                                                            class="o_unico_table_value_button"
+                                                                            t-att-disabled="!row.comparison_confirmed_drilldown || !row.comparison_confirmed_drilldown.model"
+                                                                            t-on-click="() => this.openDrilldown(row.comparison_confirmed_drilldown, 'Comparison Quote to Sale - ' + row.label)"
+                                                                            t-esc="formatPercent(row.comparison_quote_to_sale_rate)"/>
+                                                                </small>
+                                                                <small t-esc="formatPercentagePoints(row.quote_to_sale_delta_points)"/>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <div class="o_unico_conversion_rate">
+                                                                <button type="button"
+                                                                        class="o_unico_table_value_button o_unico_conversion_rate_value"
+                                                                        t-att-disabled="!row.current_paid_drilldown || !row.current_paid_drilldown.model"
+                                                                        t-on-click="() => this.openDrilldown(row.current_paid_drilldown, 'Sale to Paid - ' + row.label)"
+                                                                        t-esc="formatPercent(row.current_sale_to_paid_rate)"/>
+                                                                <small>
+                                                                    Comparison
+                                                                    <button type="button"
+                                                                            class="o_unico_table_value_button"
+                                                                            t-att-disabled="!row.comparison_paid_drilldown || !row.comparison_paid_drilldown.model"
+                                                                            t-on-click="() => this.openDrilldown(row.comparison_paid_drilldown, 'Comparison Sale to Paid - ' + row.label)"
+                                                                            t-esc="formatPercent(row.comparison_sale_to_paid_rate)"/>
+                                                                </small>
+                                                                <small t-esc="formatPercentagePoints(row.sale_to_paid_delta_points)"/>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>Total</th>
+                                                    <th class="text-end">
+                                                        <div class="o_unico_conversion_metric">
+                                                            <button type="button"
+                                                                    class="o_unico_table_value_button"
+                                                                    t-att-disabled="!conversion_total.current_cohort_drilldown || !conversion_total.current_cohort_drilldown.model"
+                                                                    t-on-click="() => this.openDrilldown(conversion_total.current_cohort_drilldown, 'Quotation Cohort - Total')"
+                                                                    t-esc="formatNumber(conversion_total.current_cohort_count)"/>
+                                                            <button type="button"
+                                                                    class="o_unico_table_value_button o_unico_conversion_amount"
+                                                                    t-att-disabled="!conversion_total.current_cohort_drilldown || !conversion_total.current_cohort_drilldown.model"
+                                                                    t-on-click="() => this.openDrilldown(conversion_total.current_cohort_drilldown, 'Quotation Cohort - Total')"
+                                                                    t-esc="formatMoney(conversion_total.current_quote_sales)"/>
+                                                        </div>
+                                                    </th>
+                                                    <th class="text-end">
+                                                        <div class="o_unico_conversion_metric">
+                                                            <button type="button"
+                                                                    class="o_unico_table_value_button"
+                                                                    t-att-disabled="!conversion_total.current_confirmed_drilldown || !conversion_total.current_confirmed_drilldown.model"
+                                                                    t-on-click="() => this.openDrilldown(conversion_total.current_confirmed_drilldown, 'Confirmed Sales - Total')"
+                                                                    t-esc="formatNumber(conversion_total.current_confirmed_count)"/>
+                                                            <button type="button"
+                                                                    class="o_unico_table_value_button o_unico_conversion_amount"
+                                                                    t-att-disabled="!conversion_total.current_confirmed_drilldown || !conversion_total.current_confirmed_drilldown.model"
+                                                                    t-on-click="() => this.openDrilldown(conversion_total.current_confirmed_drilldown, 'Confirmed Sales - Total')"
+                                                                    t-esc="formatMoney(conversion_total.current_confirmed_sales)"/>
+                                                        </div>
+                                                    </th>
+                                                    <th class="text-end">
+                                                        <div class="o_unico_conversion_metric">
+                                                            <button type="button"
+                                                                    class="o_unico_table_value_button"
+                                                                    t-att-disabled="!conversion_total.current_paid_drilldown || !conversion_total.current_paid_drilldown.model"
+                                                                    t-on-click="() => this.openDrilldown(conversion_total.current_paid_drilldown, 'Paid Sales - Total')"
+                                                                    t-esc="formatNumber(conversion_total.current_paid_count)"/>
+                                                            <button type="button"
+                                                                    class="o_unico_table_value_button o_unico_conversion_amount"
+                                                                    t-att-disabled="!conversion_total.current_paid_drilldown || !conversion_total.current_paid_drilldown.model"
+                                                                    t-on-click="() => this.openDrilldown(conversion_total.current_paid_drilldown, 'Paid Sales - Total')"
+                                                                    t-esc="formatMoney(conversion_total.current_paid_sales)"/>
+                                                        </div>
+                                                    </th>
+                                                    <th class="text-end">
+                                                        <div class="o_unico_conversion_rate">
+                                                            <button type="button"
+                                                                    class="o_unico_table_value_button o_unico_conversion_rate_value"
+                                                                    t-att-disabled="!conversion_total.current_confirmed_drilldown || !conversion_total.current_confirmed_drilldown.model"
+                                                                    t-on-click="() => this.openDrilldown(conversion_total.current_confirmed_drilldown, 'Quote to Sale - Total')"
+                                                                    t-esc="formatPercent(conversion_total.current_quote_to_sale_rate)"/>
+                                                            <small>
+                                                                Comparison
+                                                                <button type="button"
+                                                                        class="o_unico_table_value_button"
+                                                                        t-att-disabled="!conversion_total.comparison_confirmed_drilldown || !conversion_total.comparison_confirmed_drilldown.model"
+                                                                        t-on-click="() => this.openDrilldown(conversion_total.comparison_confirmed_drilldown, 'Comparison Quote to Sale - Total')"
+                                                                        t-esc="formatPercent(conversion_total.comparison_quote_to_sale_rate)"/>
+                                                            </small>
+                                                            <small t-esc="formatPercentagePoints(conversion_total.quote_to_sale_delta_points)"/>
+                                                        </div>
+                                                    </th>
+                                                    <th class="text-end">
+                                                        <div class="o_unico_conversion_rate">
+                                                            <button type="button"
+                                                                    class="o_unico_table_value_button o_unico_conversion_rate_value"
+                                                                    t-att-disabled="!conversion_total.current_paid_drilldown || !conversion_total.current_paid_drilldown.model"
+                                                                    t-on-click="() => this.openDrilldown(conversion_total.current_paid_drilldown, 'Sale to Paid - Total')"
+                                                                    t-esc="formatPercent(conversion_total.current_sale_to_paid_rate)"/>
+                                                            <small>
+                                                                Comparison
+                                                                <button type="button"
+                                                                        class="o_unico_table_value_button"
+                                                                        t-att-disabled="!conversion_total.comparison_paid_drilldown || !conversion_total.comparison_paid_drilldown.model"
+                                                                        t-on-click="() => this.openDrilldown(conversion_total.comparison_paid_drilldown, 'Comparison Sale to Paid - Total')"
+                                                                        t-esc="formatPercent(conversion_total.comparison_sale_to_paid_rate)"/>
+                                                            </small>
+                                                            <small t-esc="formatPercentagePoints(conversion_total.sale_to_paid_delta_points)"/>
+                                                        </div>
+                                                    </th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                    <div class="o_unico_conversion_notes">
+                                        <p><strong>Cohort basis:</strong> Quotes Created uses quotation creation date and includes canceled quotations. Confirmed includes current Sales Orders only. Paid uses Unico Payment Status and can include partial collected payments; canceled and Returned/Credited orders are not counted as paid.</p>
+                                        <p><strong>Value basis:</strong> Quotes, Confirmed Sales, and Paid Sales show current untaxed order values converted to company currency. Quote value includes canceled quotations. Paid Sales value is not the amount collected; use Cash Collected for payment receipts. Percentage-point changes are informational because newer cohorts have had less time to confirm and collect payment.</p>
+                                    </div>
+                                </t>
+                                <div t-else="" class="o_unico_empty_state">
+                                    No qualifying quotations were created in either period.
+                                </div>
+                            </section>
+
+                            <section id="unico_financial_trends" class="o_unico_financial_section o_unico_trend_section">
+                        <div class="o_unico_financial_section_header">
+                            <div>
+                                <h2>Trend Explorer</h2>
+                                <p class="o_unico_trend_range" t-esc="trendRangeSummary"/>
+                                <p t-if="summaryContext.partial" class="o_unico_trend_range">
+                                    Current-week points only include posted activity through today.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="o_unico_trend_controls">
+                            <t t-foreach="trendMetrics" t-as="metric" t-key="metric.key">
+                                <button type="button"
+                                        t-attf-class="o_unico_trend_chip #{isSelectedTrendMetric(metric.key) ? 'is-active' : ''}"
+                                        t-on-click="() => this.selectTrendMetric(metric.key)">
+                                    <span t-esc="metric.label"/>
+                                    <strong t-esc="formatValue(trendMetricValue(metric), metric.type)"/>
+                                </button>
+                            </t>
+                        </div>
+
+                        <div t-attf-class="o_unico_trend_focus #{selectedTrendMetric.className}" t-on-mouseleave="clearTrendHover">
+                            <div class="o_unico_trend_focus_header">
+                                <div class="o_unico_trend_focus_title">
+                                    <span>Selected metric</span>
+                                    <div class="o_unico_metric_heading_row">
+                                        <h3 t-esc="selectedTrendMetric.label"/>
+                                        <span t-if="metricDefinition(selectedTrendMetric.key)"
+                                              class="o_unico_metric_help"
+                                              t-att-title="metricTitle(selectedTrendMetric.key)"
+                                              aria-label="Metric calculation">?</span>
+                                    </div>
+                                    <small class="o_unico_trend_range" t-esc="metricTimeframeLabel(selectedTrendMetric)"/>
+                                </div>
+                                <div class="o_unico_trend_focus_meta">
+                                    <span t-esc="trendMetricValueLabel(selectedTrendMetric)"/>
+                                    <strong t-esc="formatValue(trendMetricValue(selectedTrendMetric), selectedTrendMetric.type)"/>
+                                    <small t-attf-class="#{trendClass(selectedTrendMetric)}" t-esc="trendLabel(selectedTrendMetric)"/>
+                                </div>
+                            </div>
+                            <div class="o_unico_trend_focus_plot">
+                                <div class="o_unico_trend_y_labels">
+                                    <span t-esc="chartBoundLabel(selectedTrendMetric, 'max')"/>
+                                    <span t-esc="chartBoundLabel(selectedTrendMetric, 'min')"/>
+                                </div>
+                                <svg class="o_unico_trend_focus_svg" t-att-viewBox="chartViewBox" preserveAspectRatio="none" role="img">
+                                    <title><t t-esc="selectedTrendMetric.label"/> weekly trend</title>
+                                    <t t-foreach="chartGridLines" t-as="grid_y" t-key="grid_y">
+                                        <line t-att-x1="chartAxis.x1" t-att-y1="grid_y" t-att-x2="chartAxis.x2" t-att-y2="grid_y" class="o_unico_trend_grid"/>
+                                    </t>
+                                    <line t-att-x1="chartAxis.x1" t-att-y1="chartAxis.y" t-att-x2="chartAxis.x2" t-att-y2="chartAxis.y" class="o_unico_trend_axis"/>
+                                    <path class="o_unico_trend_line" t-att-d="chartPath(selectedTrendMetric.key)"/>
+                                    <path class="o_unico_trend_regression" t-att-d="trendPath(selectedTrendMetric.key)"/>
+                                    <t t-foreach="chartPoints(selectedTrendMetric.key)" t-as="point" t-key="pointKey(selectedTrendMetric.key, point, point_index)">
+                                        <g class="o_unico_trend_point_group"
+                                           t-on-mouseenter="() => this.setTrendHover(selectedTrendMetric, point, point_index)"
+                                           t-on-click="() => this.setTrendHover(selectedTrendMetric, point, point_index)">
+                                            <circle class="o_unico_trend_hit_point" r="8" t-att-cx="point.x" t-att-cy="point.y"/>
+                                            <circle class="o_unico_trend_point" r="2.2" t-att-cx="point.x" t-att-cy="point.y"/>
+                                        </g>
+                                    </t>
+                                </svg>
+                                <div t-if="state.hoveredTrendPoint &amp;&amp; hoverMatches(selectedTrendMetric)"
+                                     class="o_unico_trend_tooltip"
+                                     t-att-style="trendTooltipStyle()">
+                                    <strong t-esc="state.hoveredTrendPoint.label"/>
+                                    <span t-esc="hoverValue()"/>
+                                </div>
+                            </div>
+                            <div class="o_unico_trend_week_labels">
+                                <span t-esc="chartStartLabel"/>
+                                <span t-esc="chartEndLabel"/>
+                            </div>
+                            <div class="o_unico_trend_focus_legend">
+                                <span><i class="o_unico_legend_actual"/> Actual weekly value</span>
+                                <span><i class="o_unico_legend_trend"/> Trend line</span>
+                            </div>
+                        </div>
+
+                    </section>
+
+                    <section id="unico_financial_weekly" class="o_unico_financial_section">
+                        <div class="o_unico_financial_section_header">
+                            <div>
+                                <h2>Week Over Week</h2>
+                                <p class="o_unico_trend_range">
+                                    Each row is a Wednesday-Tuesday reporting week inside
+                                    <t t-esc="summaryContext.range_dates"/>.
+                                </p>
+                            </div>
+                            <div class="o_unico_column_picker">
+                                <button type="button"
+                                        class="btn btn-secondary btn-sm"
+                                        aria-haspopup="true"
+                                        t-att-aria-expanded="state.weeklyColumnPickerOpen ? 'true' : 'false'"
+                                        t-on-click="toggleWeeklyColumnPicker">Columns</button>
+                                <div t-if="state.weeklyColumnPickerOpen" class="o_unico_column_picker_menu">
+                                    <t t-foreach="weeklySortColumns" t-as="column" t-key="column.key">
+                                        <label class="o_unico_column_picker_option">
+                                            <input type="checkbox"
+                                                   t-att-checked="isWeeklyColumnVisible(column.key)"
+                                                   t-att-disabled="column.required"
+                                                   t-on-change="() => this.toggleWeeklyColumn(column.key)"/>
+                                            <span t-esc="column.label"/>
+                                        </label>
+                                    </t>
+                                    <button type="button"
+                                            class="btn btn-link btn-sm o_unico_column_picker_reset"
+                                            t-on-click="showAllWeeklyColumns">Show all</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle o_unico_financial_table">
+                                <thead>
+                                    <tr>
+                                        <t t-foreach="visibleWeeklySortColumns" t-as="column" t-key="column.key">
+                                            <th t-attf-class="o_unico_sortable_th #{column.className}" t-att-aria-sort="weeklyAriaSort(column.key)">
+                                                <div t-attf-class="o_unico_table_header_content #{column.className}">
+                                                    <button type="button"
+                                                            t-attf-class="o_unico_table_sort_button #{column.className}"
+                                                            t-att-title="metricTitle(column.key)"
+                                                            t-on-click="() => this.sortWeekly(column.key)">
+                                                        <span t-esc="column.label"/>
+                                                        <i t-attf-class="o_unico_sort_indicator #{weeklySortIndicatorClass(column.key)}"/>
+                                                    </button>
+                                                    <span t-if="metricDefinition(column.key)"
+                                                          class="o_unico_metric_help"
+                                                          t-att-title="metricTitle(column.key)"
+                                                          aria-label="Metric calculation">?</span>
+                                                </div>
+                                            </th>
+                                        </t>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="paginatedRows('weekly', sortedWeekly)" t-as="week" t-key="week.key">
+                                        <tr>
+                                            <t t-foreach="visibleWeeklySortColumns" t-as="column" t-key="column.key">
+                                                <td t-if="column.key === 'key'">
+                                                    <strong t-esc="week.label"/>
+                                                    <span t-if="week.partial" class="o_unico_partial_badge">partial</span>
+                                                    <div class="text-muted small" t-esc="week.range_label"/>
+                                                </td>
+                                                <td t-else="" t-attf-class="#{column.className}">
+                                                    <div t-esc="formatWeeklyCell(week, column)"/>
+                                                    <span t-if="column.bar" class="o_unico_finance_bar">
+                                                        <i t-att-style="'width:' + barWidth(week, column.key)"/>
+                                                    </span>
+                                                </td>
+                                            </t>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div t-if="isTablePaginationVisible(sortedWeekly)" class="o_unico_table_pagination">
+                            <span t-esc="tablePageSummary('weekly', sortedWeekly)"/>
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('weekly', sortedWeekly) &lt;= 1"
+                                        t-on-click="() => this.previousTablePage('weekly')">Previous</button>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('weekly', sortedWeekly) &gt;= tablePageCount(sortedWeekly)"
+                                        t-on-click="() => this.nextTablePage('weekly', sortedWeekly)">Next</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div id="unico_financial_cogs" class="o_unico_financial_grid">
+                        <section class="o_unico_financial_section">
+                            <div class="o_unico_financial_section_header">
+                                <div>
+                                    <h2>Material Cost by Category</h2>
+                                    <p class="o_unico_trend_range">
+                                        Posted Cost of Goods Sold / Cost of Revenue for <t t-esc="summaryContext.range_dates"/>.
+                                    </p>
+                                </div>
+                            </div>
+                            <table class="table table-sm o_unico_financial_table">
+                                <thead>
+                                    <tr>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('cogs_category', 'label')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('cogs_category', 'label', 'text')">
+                                                <span>Category</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('cogs_category', 'label')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('cogs_category', 'amount')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('cogs_category', 'amount', 'money')">
+                                                <span>Amount</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('cogs_category', 'amount')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('cogs_category', 'percent')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('cogs_category', 'percent', 'percent')">
+                                                <span>% of Posted COGS</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('cogs_category', 'percent')}"/>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="tableRows('cogs_category', dashboard.cogs_by_category || [])" t-as="row" t-key="row.key">
+                                        <tr class="o_unico_clickable" t-on-click="() => this.openDrilldown(row.drilldown, row.label)">
+                                            <td t-esc="row.label"/>
+                                            <td class="text-end" t-esc="formatMoney(row.amount)"/>
+                                            <td class="text-end" t-esc="formatPercent(row.percent)"/>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div t-if="isTablePaginationVisible(dashboard.cogs_by_category || [])" class="o_unico_table_pagination">
+                                <span t-esc="tablePageSummary('cogs_category', dashboard.cogs_by_category || [])"/>
+                                <div>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('cogs_category', dashboard.cogs_by_category || []) &lt;= 1"
+                                            t-on-click="() => this.previousTablePage('cogs_category')">Previous</button>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('cogs_category', dashboard.cogs_by_category || []) &gt;= tablePageCount(dashboard.cogs_by_category || [])"
+                                            t-on-click="() => this.nextTablePage('cogs_category', dashboard.cogs_by_category || [])">Next</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="o_unico_financial_section">
+                            <div class="o_unico_financial_section_header">
+                                <div>
+                                    <h2>Posted COGS by Account</h2>
+                                    <p class="o_unico_trend_range">
+                                        Posted Cost of Revenue accounts for <t t-esc="summaryContext.range_dates"/>.
+                                    </p>
+                                </div>
+                            </div>
+                            <table class="table table-sm o_unico_financial_table">
+                                <thead>
+                                    <tr>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('cogs_account', 'label')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('cogs_account', 'label', 'text')">
+                                                <span>Account</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('cogs_account', 'label')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('cogs_account', 'amount')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('cogs_account', 'amount', 'money')">
+                                                <span>Amount</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('cogs_account', 'amount')}"/>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="tableRows('cogs_account', dashboard.cogs_by_account || [])" t-as="row" t-key="row.id">
+                                        <tr class="o_unico_clickable" t-on-click="() => this.openDrilldown(row.drilldown, row.label)">
+                                            <td><t t-esc="row.code"/> <t t-esc="row.label"/></td>
+                                            <td class="text-end" t-esc="formatMoney(row.amount)"/>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div t-if="isTablePaginationVisible(dashboard.cogs_by_account || [])" class="o_unico_table_pagination">
+                                <span t-esc="tablePageSummary('cogs_account', dashboard.cogs_by_account || [])"/>
+                                <div>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('cogs_account', dashboard.cogs_by_account || []) &lt;= 1"
+                                            t-on-click="() => this.previousTablePage('cogs_account')">Previous</button>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('cogs_account', dashboard.cogs_by_account || []) &gt;= tablePageCount(dashboard.cogs_by_account || [])"
+                                            t-on-click="() => this.nextTablePage('cogs_account', dashboard.cogs_by_account || [])">Next</button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section id="unico_financial_inventory" class="o_unico_financial_section o_unico_inventory_value_section">
+                        <div class="o_unico_financial_section_header">
+                            <div>
+                                <h2>Current On-Hand Inventory Value</h2>
+                                <p class="o_unico_trend_range">
+                                    Aggregate stock valuation by inventory account.
+                                    Snapshot <t t-esc="summaryContext.snapshot_label"/>.
+                                </p>
+                            </div>
+                            <div class="o_unico_inventory_total">
+                                <span>Grand total</span>
+                                <strong t-esc="formatMoney((dashboard.inventory_value || {}).total)"/>
+                            </div>
+                        </div>
+                        <table class="table table-sm o_unico_financial_table">
+                            <thead>
+                                <tr>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('inventory_value', 'label')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('inventory_value', 'label', 'text')">
+                                            <span>Inventory Account</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('inventory_value', 'label')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('inventory_value', 'amount')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('inventory_value', 'amount', 'money')">
+                                            <span>On-Hand Value</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('inventory_value', 'amount')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('inventory_value', 'percent')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('inventory_value', 'percent', 'percent')">
+                                            <span>% of Inventory</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('inventory_value', 'percent')}"/>
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="tableRows('inventory_value', (dashboard.inventory_value || {}).rows || [])" t-as="row" t-key="row.id">
+                                    <tr>
+                                        <td><t t-esc="row.code"/> <t t-esc="row.label"/></td>
+                                        <td class="text-end" t-esc="formatMoney(row.amount)"/>
+                                        <td class="text-end" t-esc="formatPercent(row.percent)"/>
+                                    </tr>
+                                </t>
+                                <tr t-if="!((dashboard.inventory_value || {}).rows || []).length">
+                                    <td colspan="3" class="text-muted">No current on-hand inventory value found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-if="isTablePaginationVisible((dashboard.inventory_value || {}).rows || [])" class="o_unico_table_pagination">
+                            <span t-esc="tablePageSummary('inventory_value', (dashboard.inventory_value || {}).rows || [])"/>
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('inventory_value', (dashboard.inventory_value || {}).rows || []) &lt;= 1"
+                                        t-on-click="() => this.previousTablePage('inventory_value')">Previous</button>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('inventory_value', (dashboard.inventory_value || {}).rows || []) &gt;= tablePageCount((dashboard.inventory_value || {}).rows || [])"
+                                        t-on-click="() => this.nextTablePage('inventory_value', (dashboard.inventory_value || {}).rows || [])">Next</button>
+                            </div>
+                        </div>
+                        <div t-if="state.inventoryHistoryLoading" class="o_unico_inventory_history_empty">
+                            Loading historical inventory value...
+                        </div>
+                        <div t-elif="state.inventoryHistoryError" class="o_unico_inventory_history_empty o_unico_inventory_history_error">
+                            <t t-esc="state.inventoryHistoryError"/>
+                        </div>
+                        <div t-elif="inventoryHistorySeries.length &amp;&amp; inventoryHistoryPointsList.length" class="o_unico_inventory_history">
+                            <div class="o_unico_inventory_history_header">
+                                <div>
+                                    <h3>Historical Inventory Value</h3>
+                                    <p class="o_unico_trend_range">
+                                        Period-end inventory valuation by account for the selected date range.
+                                        The total line shows all inventory accounts combined.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="o_unico_inventory_history_plot">
+                                <div class="o_unico_trend_y_labels">
+                                    <span t-esc="inventoryHistoryBoundLabel('max')"/>
+                                    <span t-esc="inventoryHistoryBoundLabel('min')"/>
+                                </div>
+                                <svg class="o_unico_trend_focus_svg" t-att-viewBox="chartViewBox" preserveAspectRatio="none" role="img">
+                                    <title>Historical inventory value by account</title>
+                                    <t t-foreach="chartGridLines" t-as="grid_y" t-key="grid_y">
+                                        <line t-att-x1="chartAxis.x1" t-att-y1="grid_y" t-att-x2="chartAxis.x2" t-att-y2="grid_y" class="o_unico_trend_grid"/>
+                                    </t>
+                                    <line t-att-x1="chartAxis.x1" t-att-y1="chartAxis.y" t-att-x2="chartAxis.x2" t-att-y2="chartAxis.y" class="o_unico_trend_axis"/>
+                                    <t t-foreach="inventoryHistorySeries" t-as="series" t-key="series.key">
+                                        <path t-attf-class="o_unico_inventory_history_line #{series.is_total ? 'is-total' : ''}"
+                                              t-att-d="inventoryHistoryPath(series)"
+                                              t-att-stroke="inventoryHistorySeriesColor(series_index)"/>
+                                        <t t-foreach="inventoryHistoryPoints(series)" t-as="point" t-key="series.key + '-' + point_index">
+                                            <circle t-attf-class="o_unico_inventory_history_point #{series.is_total ? 'is-total' : ''}"
+                                                    t-att-cx="point.x"
+                                                    t-att-cy="point.y"
+                                                    t-att-r="series.is_total ? 3 : 2.2"
+                                                    t-att-fill="inventoryHistorySeriesColor(series_index)"/>
+                                        </t>
+                                    </t>
+                                </svg>
+                            </div>
+                            <div class="o_unico_trend_week_labels">
+                                <span t-esc="inventoryHistoryStartLabel"/>
+                                <span t-esc="inventoryHistoryEndLabel"/>
+                            </div>
+                            <div class="o_unico_inventory_history_legend">
+                                <t t-foreach="inventoryHistorySeries" t-as="series" t-key="series.key">
+                                    <span>
+                                        <i t-att-style="'background: ' + inventoryHistorySeriesColor(series_index)"/>
+                                        <strong>
+                                            <t t-if="series.account_code"><t t-esc="series.account_code"/> </t>
+                                            <t t-esc="series.label"/>
+                                        </strong>
+                                        <em t-esc="formatMoney(inventoryHistoryLastValue(series))"/>
+                                    </span>
+                                </t>
+                            </div>
+                        </div>
+                        <div t-elif="state.inventoryHistoryLoaded" class="o_unico_inventory_history_empty">
+                            No historical inventory value found for this date range.
+                        </div>
+                    </section>
+
+                    <div id="unico_financial_ar_ap" class="o_unico_financial_grid">
+                        <section class="o_unico_financial_section">
+                            <div class="o_unico_financial_section_header">
+                                <div>
+                                    <h2>Accounts Receivable</h2>
+                                    <p class="o_unico_trend_range">
+                                        Customer balances due, separate from credits and offsets.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="o_unico_balance_summary">
+                                <button type="button" class="o_unico_balance_action" t-on-click="() => this.scrollToSection('unico_financial_ar_aging')">
+                                    <span>Gross open AR</span>
+                                    <strong t-esc="formatMoney((dashboard.open_ar || {}).amount)"/>
+                                    <small>View AR aging report</small>
+                                </button>
+                                <button type="button" class="o_unico_balance_action o_unico_balance_offset" t-on-click="() => this.scrollToSection('unico_financial_ar_offsets')">
+                                    <span>Credits / offsets</span>
+                                    <strong t-esc="formatMoney((dashboard.ar_offsets || {}).total)"/>
+                                    <small>Reduces AR; not customer debt</small>
+                                </button>
+                                <button type="button" class="o_unico_balance_action" t-on-click="() => this.scrollToSection('unico_financial_ar_details')">
+                                    <span>Net AR</span>
+                                    <strong t-esc="formatMoney((dashboard.open_ar || {}).net_amount)"/>
+                                    <small>View customer balance table</small>
+                                </button>
+                            </div>
+                            <div class="o_unico_financial_bucket_grid">
+                                <t t-foreach="dashboard.aging_buckets || []" t-as="bucket" t-key="bucket.label">
+                                    <button type="button"
+                                            class="o_unico_financial_bucket o_unico_bucket_action"
+                                            t-att-disabled="!bucket.drilldown || !bucket.drilldown.model"
+                                            t-on-click="() => this.openDrilldown(bucket.drilldown, bucket.label)">
+                                        <span t-esc="bucket.label"/>
+                                        <strong t-esc="formatMoney(bucket.amount)"/>
+                                        <small><t t-esc="formatNumber(bucket.count)"/> invoices</small>
+                                    </button>
+                                </t>
+                            </div>
+                        </section>
+
+                        <section class="o_unico_financial_section">
+                            <div class="o_unico_financial_section_header">
+                                <div>
+                                    <h2>Accounts Payable</h2>
+                                    <p class="o_unico_trend_range">
+                                        Vendor payable balances by due-date aging.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="o_unico_balance_summary o_unico_balance_summary_single">
+                                <button type="button" class="o_unico_balance_action" t-on-click="() => this.scrollToSection('unico_financial_ap_aging')">
+                                    <span>Open AP</span>
+                                    <strong t-esc="formatMoney((dashboard.open_ap || {}).amount)"/>
+                                    <small><t t-esc="formatNumber((dashboard.open_ap || {}).count)"/> payable lines by aging</small>
+                                </button>
+                            </div>
+                            <div class="o_unico_financial_bucket_grid">
+                                <t t-foreach="dashboard.ap_aging_buckets || []" t-as="bucket" t-key="bucket.label">
+                                    <button type="button"
+                                            class="o_unico_financial_bucket o_unico_bucket_action"
+                                            t-att-disabled="!bucket.drilldown || !bucket.drilldown.model"
+                                            t-on-click="() => this.openDrilldown(bucket.drilldown, bucket.label)">
+                                        <span t-esc="bucket.label"/>
+                                        <strong t-esc="formatMoney(bucket.amount)"/>
+                                        <small><t t-esc="formatNumber(bucket.count)"/> payable lines</small>
+                                    </button>
+                                </t>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section id="unico_financial_ar_aging" class="o_unico_financial_section">
+                        <div class="o_unico_financial_section_header">
+                            <div>
+                                <h2>Accounts Receivable Aging</h2>
+                                <p class="o_unico_trend_range">
+                                    Open customer receivable balances by due-date aging, grouped by customer with current customer tags.
+                                </p>
+                            </div>
+                        </div>
+                        <table class="table table-sm o_unico_financial_table">
+                            <thead>
+                                <tr>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ar_aging', 'customer')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ar_aging', 'customer', 'text')">
+                                            <span>Customer</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_aging', 'customer')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ar_aging', 'tags_label')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ar_aging', 'tags_label', 'text')">
+                                            <span>Customer Tags</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_aging', 'tags_label')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_aging', 'current')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_aging', 'current', 'money')">
+                                            <span>Current</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_aging', 'current')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_aging', 'days_1_30')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_aging', 'days_1_30', 'money')">
+                                            <span>1-30</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_aging', 'days_1_30')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_aging', 'days_31_60')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_aging', 'days_31_60', 'money')">
+                                            <span>31-60</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_aging', 'days_31_60')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_aging', 'days_61_90')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_aging', 'days_61_90', 'money')">
+                                            <span>61-90</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_aging', 'days_61_90')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_aging', 'days_91_120')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_aging', 'days_91_120', 'money')">
+                                            <span>91-120</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_aging', 'days_91_120')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_aging', 'older')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_aging', 'older', 'money')">
+                                            <span>Older</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_aging', 'older')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_aging', 'total')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_aging', 'total', 'money')">
+                                            <span>Total</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_aging', 'total')}"/>
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="tableRows('ar_aging', (dashboard.ar_aging_report || {}).rows || [])" t-as="row" t-key="row.id">
+                                    <tr t-att-class="row.drilldown &amp;&amp; row.drilldown.model ? 'o_unico_clickable' : ''"
+                                        t-on-click="() => this.openDrilldown(row.drilldown, row.customer)">
+                                        <td t-esc="row.customer"/>
+                                        <td>
+                                            <div t-if="row.tags &amp;&amp; row.tags.length" class="o_unico_customer_tags">
+                                                <t t-foreach="row.tags" t-as="tag" t-key="tag.id">
+                                                    <span class="o_tag o_badge badge rounded-pill d-inline-flex align-items-center"
+                                                          t-attf-class="o_tag_color_#{tag.color || 0}"
+                                                          t-att-title="tag.name">
+                                                        <span class="o_tag_badge_text text-truncate" t-esc="tag.name"/>
+                                                    </span>
+                                                </t>
+                                            </div>
+                                            <span t-else="" class="text-muted">None</span>
+                                        </td>
+                                        <td class="text-end" t-esc="formatMoney(row.current)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.days_1_30)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.days_31_60)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.days_61_90)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.days_91_120)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.older)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.total)"/>
+                                    </tr>
+                                </t>
+                                <tr t-if="!((dashboard.ar_aging_report || {}).rows || []).length">
+                                    <td colspan="9" class="text-muted">No open customer receivable balances found.</td>
+                                </tr>
+                            </tbody>
+                            <tfoot t-if="((dashboard.ar_aging_report || {}).rows || []).length">
+                                <tr>
+                                    <th>Total</th>
+                                    <th></th>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ar_aging_report || {}).totals.current)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ar_aging_report || {}).totals.days_1_30)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ar_aging_report || {}).totals.days_31_60)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ar_aging_report || {}).totals.days_61_90)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ar_aging_report || {}).totals.days_91_120)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ar_aging_report || {}).totals.older)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ar_aging_report || {}).totals.total)"/>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div t-if="isTablePaginationVisible((dashboard.ar_aging_report || {}).rows || [])" class="o_unico_table_pagination">
+                            <span t-esc="tablePageSummary('ar_aging', (dashboard.ar_aging_report || {}).rows || [])"/>
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('ar_aging', (dashboard.ar_aging_report || {}).rows || []) &lt;= 1"
+                                        t-on-click="() => this.previousTablePage('ar_aging')">Previous</button>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('ar_aging', (dashboard.ar_aging_report || {}).rows || []) &gt;= tablePageCount((dashboard.ar_aging_report || {}).rows || [])"
+                                        t-on-click="() => this.nextTablePage('ar_aging', (dashboard.ar_aging_report || {}).rows || [])">Next</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="unico_financial_ar_details" class="o_unico_financial_section">
+                        <div class="o_unico_financial_section_header">
+                            <div>
+                                <h2>Current Outstanding Customer Balances</h2>
+                                <p class="o_unico_trend_range">
+                                    Shows the largest current open AR balances by customer. Customer credits and unapplied offsets are shown separately so they are not mistaken for amounts the customer owes.
+                                </p>
+                            </div>
+                        </div>
+                        <table class="table table-sm o_unico_financial_table">
+                            <thead>
+                                <tr>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ar_customer_balances', 'customer')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ar_customer_balances', 'customer', 'text')">
+                                            <span>Customer</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_customer_balances', 'customer')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ar_customer_balances', 'status')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ar_customer_balances', 'status', 'text')">
+                                            <span>Status</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_customer_balances', 'status')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_customer_balances', 'open_amount')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_customer_balances', 'open_amount', 'money')">
+                                            <span>Open AR Balance</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_customer_balances', 'open_amount')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_customer_balances', 'offset_amount')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_customer_balances', 'offset_amount', 'money')">
+                                            <span>Customer Credits / Offsets</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_customer_balances', 'offset_amount')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_customer_balances', 'net_amount')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_customer_balances', 'net_amount', 'money')">
+                                            <span>Net AR</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_customer_balances', 'net_amount')}"/>
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="tableRows('ar_customer_balances', dashboard.ar_customer_balances || [])" t-as="row" t-key="row.id">
+                                    <tr t-att-class="row.drilldown &amp;&amp; row.drilldown.model ? 'o_unico_clickable' : ''"
+                                        t-on-click="() => this.openDrilldown(row.drilldown, row.customer)">
+                                        <td t-esc="row.customer"/>
+                                        <td><span class="o_unico_ar_status" t-esc="row.status"/></td>
+                                        <td class="text-end" t-esc="formatMoney(row.open_amount)"/>
+                                        <td class="text-end o_unico_offset_amount" t-esc="formatMoney(row.offset_amount)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.net_amount)"/>
+                                    </tr>
+                                </t>
+                                <tr t-if="!(dashboard.ar_customer_balances || []).length">
+                                    <td colspan="5" class="text-muted">No open customer receivable balances found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-if="isTablePaginationVisible(dashboard.ar_customer_balances || [])" class="o_unico_table_pagination">
+                            <span t-esc="tablePageSummary('ar_customer_balances', dashboard.ar_customer_balances || [])"/>
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('ar_customer_balances', dashboard.ar_customer_balances || []) &lt;= 1"
+                                        t-on-click="() => this.previousTablePage('ar_customer_balances')">Previous</button>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('ar_customer_balances', dashboard.ar_customer_balances || []) &gt;= tablePageCount(dashboard.ar_customer_balances || [])"
+                                        t-on-click="() => this.nextTablePage('ar_customer_balances', dashboard.ar_customer_balances || [])">Next</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="unico_financial_ar_offsets" class="o_unico_financial_section">
+                        <div class="o_unico_financial_section_header">
+                            <div>
+                                <h2>Open Customer Credits &amp; AR Offsets</h2>
+                                <p class="o_unico_trend_range">
+                                    Shows open customer credits, overpayments, unapplied payments, and settlement offsets that reduce Net AR. These are not amounts customers owe.
+                                </p>
+                            </div>
+                        </div>
+                        <table class="table table-sm o_unico_financial_table">
+                            <thead>
+                                <tr>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ar_offsets', 'reference')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ar_offsets', 'reference', 'text')">
+                                            <span>Reference</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_offsets', 'reference')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ar_offsets', 'customer')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ar_offsets', 'customer', 'text')">
+                                            <span>Customer</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_offsets', 'customer')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ar_offsets', 'reason')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ar_offsets', 'reason', 'text')">
+                                            <span>Reason</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_offsets', 'reason')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ar_offsets', 'date')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ar_offsets', 'date', 'text')">
+                                            <span>Accounting Date</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_offsets', 'date')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ar_offsets', 'amount')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ar_offsets', 'amount', 'money')">
+                                            <span>Credit / Offset Amount</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ar_offsets', 'amount')}"/>
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="tableRows('ar_offsets', (dashboard.ar_offsets || {}).rows || [])" t-as="row" t-key="row.id">
+                                    <tr class="o_unico_clickable" t-on-click="() => this.openRecord('account.move', row.move_id)">
+                                        <td t-esc="row.reference"/>
+                                        <td t-esc="row.customer"/>
+                                        <td><span class="o_unico_offset_reason" t-esc="row.reason"/></td>
+                                        <td t-esc="row.date"/>
+                                        <td class="text-end o_unico_offset_amount" t-esc="formatMoney(row.amount)"/>
+                                    </tr>
+                                </t>
+                                <tr t-if="!((dashboard.ar_offsets || {}).rows || []).length">
+                                    <td colspan="5" class="text-muted">No open customer credits or AR offsets found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-if="isTablePaginationVisible((dashboard.ar_offsets || {}).rows || [])" class="o_unico_table_pagination">
+                            <span t-esc="tablePageSummary('ar_offsets', (dashboard.ar_offsets || {}).rows || [])"/>
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('ar_offsets', (dashboard.ar_offsets || {}).rows || []) &lt;= 1"
+                                        t-on-click="() => this.previousTablePage('ar_offsets')">Previous</button>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('ar_offsets', (dashboard.ar_offsets || {}).rows || []) &gt;= tablePageCount((dashboard.ar_offsets || {}).rows || [])"
+                                        t-on-click="() => this.nextTablePage('ar_offsets', (dashboard.ar_offsets || {}).rows || [])">Next</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="unico_financial_ap_aging" class="o_unico_financial_section">
+                        <div class="o_unico_financial_section_header">
+                            <div>
+                                <h2>Accounts Payable Aging</h2>
+                                <p class="o_unico_trend_range">
+                                    Shows open vendor payable balances by due-date aging. Rows are grouped by vendor; the line-level detail is listed below.
+                                </p>
+                            </div>
+                        </div>
+                        <table class="table table-sm o_unico_financial_table">
+                            <thead>
+                                <tr>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ap_aging', 'vendor')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ap_aging', 'vendor', 'text')">
+                                            <span>Vendor</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_aging', 'vendor')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ap_aging', 'current')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ap_aging', 'current', 'money')">
+                                            <span>Current</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_aging', 'current')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ap_aging', 'days_1_30')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ap_aging', 'days_1_30', 'money')">
+                                            <span>1-30</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_aging', 'days_1_30')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ap_aging', 'days_31_60')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ap_aging', 'days_31_60', 'money')">
+                                            <span>31-60</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_aging', 'days_31_60')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ap_aging', 'days_61_90')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ap_aging', 'days_61_90', 'money')">
+                                            <span>61-90</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_aging', 'days_61_90')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ap_aging', 'days_91_120')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ap_aging', 'days_91_120', 'money')">
+                                            <span>91-120</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_aging', 'days_91_120')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ap_aging', 'older')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ap_aging', 'older', 'money')">
+                                            <span>Older</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_aging', 'older')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ap_aging', 'total')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ap_aging', 'total', 'money')">
+                                            <span>Total</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_aging', 'total')}"/>
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="tableRows('ap_aging', (dashboard.ap_aging_report || {}).rows || [])" t-as="row" t-key="row.id">
+                                    <tr t-att-class="row.drilldown &amp;&amp; row.drilldown.model ? 'o_unico_clickable' : ''"
+                                        t-on-click="() => this.openDrilldown(row.drilldown, row.vendor)">
+                                        <td t-esc="row.vendor"/>
+                                        <td class="text-end" t-esc="formatMoney(row.current)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.days_1_30)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.days_31_60)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.days_61_90)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.days_91_120)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.older)"/>
+                                        <td class="text-end" t-esc="formatMoney(row.total)"/>
+                                    </tr>
+                                </t>
+                                <tr t-if="!((dashboard.ap_aging_report || {}).rows || []).length">
+                                    <td colspan="8" class="text-muted">No open vendor payable balances found.</td>
+                                </tr>
+                            </tbody>
+                            <tfoot t-if="((dashboard.ap_aging_report || {}).rows || []).length">
+                                <tr>
+                                    <th>Total</th>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ap_aging_report || {}).totals.current)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ap_aging_report || {}).totals.days_1_30)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ap_aging_report || {}).totals.days_31_60)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ap_aging_report || {}).totals.days_61_90)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ap_aging_report || {}).totals.days_91_120)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ap_aging_report || {}).totals.older)"/>
+                                    <th class="text-end" t-esc="formatMoney((dashboard.ap_aging_report || {}).totals.total)"/>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div t-if="isTablePaginationVisible((dashboard.ap_aging_report || {}).rows || [])" class="o_unico_table_pagination">
+                            <span t-esc="tablePageSummary('ap_aging', (dashboard.ap_aging_report || {}).rows || [])"/>
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('ap_aging', (dashboard.ap_aging_report || {}).rows || []) &lt;= 1"
+                                        t-on-click="() => this.previousTablePage('ap_aging')">Previous</button>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('ap_aging', (dashboard.ap_aging_report || {}).rows || []) &gt;= tablePageCount((dashboard.ap_aging_report || {}).rows || [])"
+                                        t-on-click="() => this.nextTablePage('ap_aging', (dashboard.ap_aging_report || {}).rows || [])">Next</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="unico_financial_ap_details" class="o_unico_financial_section">
+                        <div class="o_unico_financial_section_header">
+                            <div>
+                                <h2>Oldest Open Vendor Payables</h2>
+                                <p class="o_unico_trend_range">
+                                    Shows the oldest unpaid vendor bill or payable lines included in the current Accounts Payable balance. These are individual open AP items, not grouped vendor totals. Bill / Entry Date is the Odoo accounting date; Due Date may reflect the original vendor due date, including imported legacy items.
+                                </p>
+                            </div>
+                        </div>
+                        <table class="table table-sm o_unico_financial_table">
+                            <thead>
+                                <tr>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ap_payable_lines', 'reference')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ap_payable_lines', 'reference', 'text')">
+                                            <span>Reference</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_payable_lines', 'reference')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ap_payable_lines', 'vendor')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ap_payable_lines', 'vendor', 'text')">
+                                            <span>Vendor</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_payable_lines', 'vendor')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ap_payable_lines', 'date')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ap_payable_lines', 'date', 'text')">
+                                            <span>Bill / Entry Date</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_payable_lines', 'date')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('ap_payable_lines', 'due_date')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('ap_payable_lines', 'due_date', 'text')">
+                                            <span>Due Date</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_payable_lines', 'due_date')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('ap_payable_lines', 'amount')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('ap_payable_lines', 'amount', 'money')">
+                                            <span>Open AP Amount</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('ap_payable_lines', 'amount')}"/>
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="tableRows('ap_payable_lines', dashboard.ap_payable_lines || [])" t-as="row" t-key="row.id">
+                                    <tr class="o_unico_clickable" t-on-click="() => this.openRecord('account.move', row.move_id)">
+                                        <td t-esc="row.reference"/>
+                                        <td t-esc="row.vendor"/>
+                                        <td t-esc="row.date"/>
+                                        <td t-esc="row.due_date"/>
+                                        <td class="text-end" t-esc="formatMoney(row.amount)"/>
+                                    </tr>
+                                </t>
+                                <tr t-if="!(dashboard.ap_payable_lines || []).length">
+                                    <td colspan="5" class="text-muted">No open payable lines found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-if="isTablePaginationVisible(dashboard.ap_payable_lines || [])" class="o_unico_table_pagination">
+                            <span t-esc="tablePageSummary('ap_payable_lines', dashboard.ap_payable_lines || [])"/>
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('ap_payable_lines', dashboard.ap_payable_lines || []) &lt;= 1"
+                                        t-on-click="() => this.previousTablePage('ap_payable_lines')">Previous</button>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('ap_payable_lines', dashboard.ap_payable_lines || []) &gt;= tablePageCount(dashboard.ap_payable_lines || [])"
+                                        t-on-click="() => this.nextTablePage('ap_payable_lines', dashboard.ap_payable_lines || [])">Next</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div id="unico_financial_operations" class="o_unico_financial_grid">
+                        <section class="o_unico_financial_section">
+                            <div class="o_unico_financial_section_header">
+                                <h2>Stripe Terminal Payments</h2>
+                                <p class="o_unico_trend_range">
+                                    Summarizes Stripe terminal payment activity by status for the selected reporting period.
+                                </p>
+                            </div>
+                            <table class="table table-sm o_unico_financial_table">
+                                <thead>
+                                    <tr>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('stripe_status', 'status')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('stripe_status', 'status', 'text')">
+                                                <span>Status</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('stripe_status', 'status')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('stripe_status', 'count')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('stripe_status', 'count', 'number')">
+                                                <span>Count</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('stripe_status', 'count')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('stripe_status', 'amount')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('stripe_status', 'amount', 'money')">
+                                                <span>Total Amount</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('stripe_status', 'amount')}"/>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="tableRows('stripe_status', dashboard.stripe_status || [])" t-as="row" t-key="row.status">
+                                        <tr t-att-class="row.drilldown &amp;&amp; row.drilldown.model ? 'o_unico_clickable' : ''"
+                                            t-on-click="() => this.openDrilldown(row.drilldown, row.status)">
+                                            <td class="text-capitalize" t-esc="row.status"/>
+                                            <td class="text-end" t-esc="formatNumber(row.count)"/>
+                                            <td class="text-end" t-esc="formatMoney(row.amount)"/>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div t-if="isTablePaginationVisible(dashboard.stripe_status || [])" class="o_unico_table_pagination">
+                                <span t-esc="tablePageSummary('stripe_status', dashboard.stripe_status || [])"/>
+                                <div>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('stripe_status', dashboard.stripe_status || []) &lt;= 1"
+                                            t-on-click="() => this.previousTablePage('stripe_status')">Previous</button>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('stripe_status', dashboard.stripe_status || []) &gt;= tablePageCount(dashboard.stripe_status || [])"
+                                            t-on-click="() => this.nextTablePage('stripe_status', dashboard.stripe_status || [])">Next</button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="o_unico_financial_grid">
+                        <section class="o_unico_financial_section">
+                            <div class="o_unico_financial_section_header">
+                                <h2>Sales Quality</h2>
+                            </div>
+                            <table class="table table-sm o_unico_financial_table">
+                                <thead>
+                                    <tr>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('salespeople', 'name')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('salespeople', 'name', 'text')">
+                                                <span>Salesperson</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('salespeople', 'name')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('salespeople', 'sales')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('salespeople', 'sales', 'money')">
+                                                <span>Sales</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('salespeople', 'sales')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('salespeople', 'margin_percent')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('salespeople', 'margin_percent', 'percent')">
+                                                <span>Margin</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('salespeople', 'margin_percent')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('salespeople', 'order_count')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('salespeople', 'order_count', 'number')">
+                                                <span>Orders</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('salespeople', 'order_count')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('salespeople', 'low_margin_order_count')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('salespeople', 'low_margin_order_count', 'number')">
+                                                <span>Low Margin</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('salespeople', 'low_margin_order_count')}"/>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="tableRows('salespeople', dashboard.salespeople || [])" t-as="row" t-key="row.id">
+                                        <tr t-att-class="row.drilldown &amp;&amp; row.drilldown.model ? 'o_unico_clickable' : ''"
+                                            t-on-click="() => this.openDrilldown(row.drilldown, row.name)">
+                                            <td t-esc="row.name"/>
+                                            <td class="text-end" t-esc="formatMoney(row.sales)"/>
+                                            <td class="text-end" t-esc="formatPercent(row.margin_percent)"/>
+                                            <td class="text-end" t-esc="formatNumber(row.order_count)"/>
+                                            <td class="text-end" t-esc="formatNumber(row.low_margin_order_count)"/>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div t-if="isTablePaginationVisible(dashboard.salespeople || [])" class="o_unico_table_pagination">
+                                <span t-esc="tablePageSummary('salespeople', dashboard.salespeople || [])"/>
+                                <div>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('salespeople', dashboard.salespeople || []) &lt;= 1"
+                                            t-on-click="() => this.previousTablePage('salespeople')">Previous</button>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('salespeople', dashboard.salespeople || []) &gt;= tablePageCount(dashboard.salespeople || [])"
+                                            t-on-click="() => this.nextTablePage('salespeople', dashboard.salespeople || [])">Next</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="o_unico_financial_section o_unico_payment_terms_section">
+                            <div class="o_unico_financial_section_header">
+                                <div>
+                                    <h2>Confirmed Sales by Payment Terms</h2>
+                                    <p class="o_unico_trend_range">
+                                        Untaxed confirmed sales for
+                                        <t t-esc="(dashboard.payment_term_analysis || {}).range_label"/>,
+                                        compared with
+                                        <t t-esc="(dashboard.payment_term_analysis || {}).comparison_label"/>.
+                                    </p>
+                                </div>
+                            </div>
+                            <t t-set="payment_term_analysis"
+                               t-value="dashboard.payment_term_analysis || {}"/>
+                            <t t-if="(payment_term_analysis.rows || []).length">
+                                <div class="table-responsive">
+                                    <table class="table table-sm o_unico_financial_table o_unico_payment_terms_table">
+                                        <thead>
+                                            <tr>
+                                                <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('payment_terms', 'label')">
+                                                    <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('payment_terms', 'label', 'text')">
+                                                        <span>Payment Terms</span>
+                                                        <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('payment_terms', 'label')}"/>
+                                                    </button>
+                                                </th>
+                                                <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('payment_terms', 'current_order_count')">
+                                                    <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('payment_terms', 'current_order_count', 'number')">
+                                                        <span>Orders</span>
+                                                        <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('payment_terms', 'current_order_count')}"/>
+                                                    </button>
+                                                </th>
+                                                <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('payment_terms', 'current_confirmed_sales')">
+                                                    <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('payment_terms', 'current_confirmed_sales', 'money')">
+                                                        <span>Confirmed Sales (Untaxed)</span>
+                                                        <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('payment_terms', 'current_confirmed_sales')}"/>
+                                                    </button>
+                                                </th>
+                                                <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('payment_terms', 'current_share_percent')">
+                                                    <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('payment_terms', 'current_share_percent', 'percent')">
+                                                        <span>Current Mix</span>
+                                                        <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('payment_terms', 'current_share_percent')}"/>
+                                                    </button>
+                                                </th>
+                                                <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('payment_terms', 'comparison_share_percent')">
+                                                    <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('payment_terms', 'comparison_share_percent', 'percent')">
+                                                        <span>Comparison Mix</span>
+                                                        <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('payment_terms', 'comparison_share_percent')}"/>
+                                                    </button>
+                                                </th>
+                                                <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('payment_terms', 'share_delta_points')">
+                                                    <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('payment_terms', 'share_delta_points', 'number')">
+                                                        <span>Mix Change</span>
+                                                        <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('payment_terms', 'share_delta_points')}"/>
+                                                    </button>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="tableRows('payment_terms', payment_term_analysis.rows || [])" t-as="row" t-key="row.id">
+                                                <tr>
+                                                    <td t-esc="row.label"/>
+                                                    <td class="text-end">
+                                                        <button type="button"
+                                                                class="o_unico_table_value_button"
+                                                                t-att-disabled="!row.current_drilldown || !row.current_drilldown.model"
+                                                                t-on-click="() => this.openDrilldown(row.current_drilldown, 'Confirmed Sales - ' + row.label)"
+                                                                t-esc="formatNumber(row.current_order_count)"/>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <button type="button"
+                                                                class="o_unico_table_value_button"
+                                                                t-att-disabled="!row.current_drilldown || !row.current_drilldown.model"
+                                                                t-on-click="() => this.openDrilldown(row.current_drilldown, 'Confirmed Sales - ' + row.label)"
+                                                                t-esc="formatMoney(row.current_confirmed_sales)"/>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <button type="button"
+                                                                class="o_unico_table_value_button"
+                                                                t-att-disabled="!row.current_drilldown || !row.current_drilldown.model"
+                                                                t-on-click="() => this.openDrilldown(row.current_drilldown, 'Confirmed Sales - ' + row.label)"
+                                                                t-esc="formatPercent(row.current_share_percent)"/>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <button type="button"
+                                                                class="o_unico_table_value_button"
+                                                                t-att-disabled="!row.comparison_drilldown || !row.comparison_drilldown.model"
+                                                                t-on-click="() => this.openDrilldown(row.comparison_drilldown, 'Comparison Confirmed Sales - ' + row.label)"
+                                                                t-esc="formatPercent(row.comparison_share_percent)"/>
+                                                    </td>
+                                                    <td class="text-end" t-esc="formatPercentagePoints(row.share_delta_points)"/>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Selected-period total</th>
+                                                <th class="text-end" t-esc="formatNumber((payment_term_analysis.current_total || {}).order_count)"/>
+                                                <th class="text-end" t-esc="formatMoney((payment_term_analysis.current_total || {}).confirmed_sales)"/>
+                                                <th class="text-end" t-esc="formatPercent(paymentTermShareTotal(payment_term_analysis.current_total || {}))"/>
+                                                <th class="text-end" t-esc="formatPercent(paymentTermShareTotal(payment_term_analysis.comparison_total || {}))"/>
+                                                <th class="text-end">—</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <div t-if="isTablePaginationVisible(payment_term_analysis.rows || [])" class="o_unico_table_pagination">
+                                    <span t-esc="tablePageSummary('payment_terms', payment_term_analysis.rows || [])"/>
+                                    <div>
+                                        <button type="button" class="btn btn-secondary btn-sm"
+                                                t-att-disabled="currentTablePage('payment_terms', payment_term_analysis.rows || []) &lt;= 1"
+                                                t-on-click="() => this.previousTablePage('payment_terms')">Previous</button>
+                                        <button type="button" class="btn btn-secondary btn-sm"
+                                                t-att-disabled="currentTablePage('payment_terms', payment_term_analysis.rows || []) &gt;= tablePageCount(payment_term_analysis.rows || [])"
+                                                t-on-click="() => this.nextTablePage('payment_terms', payment_term_analysis.rows || [])">Next</button>
+                                    </div>
+                                </div>
+                                <p class="o_unico_payment_terms_note">
+                                    The footer is the authoritative period total. Term rows are rounded independently, so their displayed sum may differ by a cent.
+                                </p>
+                            </t>
+                            <div t-else="" class="o_unico_empty_state">
+                                No confirmed sales orders were found in either period.
+                            </div>
+                        </section>
+
+                        <section class="o_unico_financial_section">
+                            <div class="o_unico_financial_section_header">
+                                <h2>Low-Margin Orders</h2>
+                            </div>
+                            <table class="table table-sm o_unico_financial_table">
+                                <thead>
+                                    <tr>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('low_margin_orders', 'name')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('low_margin_orders', 'name', 'text')">
+                                                <span>Order</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('low_margin_orders', 'name')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('low_margin_orders', 'customer')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('low_margin_orders', 'customer', 'text')">
+                                                <span>Customer</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('low_margin_orders', 'customer')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('low_margin_orders', 'sales')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('low_margin_orders', 'sales', 'money')">
+                                                <span>Sales</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('low_margin_orders', 'sales')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('low_margin_orders', 'margin_percent')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('low_margin_orders', 'margin_percent', 'percent')">
+                                                <span>Margin</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('low_margin_orders', 'margin_percent')}"/>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="tableRows('low_margin_orders', dashboard.low_margin_orders || [])" t-as="row" t-key="row.id">
+                                        <tr class="o_unico_clickable" t-on-click="() => this.openRecord('sale.order', row.id)">
+                                            <td t-esc="row.name"/>
+                                            <td t-esc="row.customer"/>
+                                            <td class="text-end" t-esc="formatMoney(row.sales)"/>
+                                            <td class="text-end" t-esc="formatPercent(row.margin_percent)"/>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div t-if="isTablePaginationVisible(dashboard.low_margin_orders || [])" class="o_unico_table_pagination">
+                                <span t-esc="tablePageSummary('low_margin_orders', dashboard.low_margin_orders || [])"/>
+                                <div>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('low_margin_orders', dashboard.low_margin_orders || []) &lt;= 1"
+                                            t-on-click="() => this.previousTablePage('low_margin_orders')">Previous</button>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('low_margin_orders', dashboard.low_margin_orders || []) &gt;= tablePageCount(dashboard.low_margin_orders || [])"
+                                            t-on-click="() => this.nextTablePage('low_margin_orders', dashboard.low_margin_orders || [])">Next</button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="o_unico_financial_grid">
+                        <section class="o_unico_financial_section">
+                            <div class="o_unico_financial_section_header">
+                                <div>
+                                    <h2>Open Returns &amp; Replacement Exposure</h2>
+                                    <p class="o_unico_trend_range">
+                                        Shows active RMA/return cases and their estimated return or replacement value. These amounts represent potential credit or replacement exposure, not necessarily posted accounting credits.
+                                    </p>
+                                </div>
+                            </div>
+                            <table class="table table-sm o_unico_financial_table">
+                                <thead>
+                                    <tr>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('rma_exposure', 'name')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('rma_exposure', 'name', 'text')">
+                                                <span>RMA</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('rma_exposure', 'name')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('rma_exposure', 'customer')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('rma_exposure', 'customer', 'text')">
+                                                <span>Customer</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('rma_exposure', 'customer')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('rma_exposure', 'state')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('rma_exposure', 'state', 'text')">
+                                                <span>Status</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('rma_exposure', 'state')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('rma_exposure', 'return_value')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('rma_exposure', 'return_value', 'money')">
+                                                <span>Return Value</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('rma_exposure', 'return_value')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('rma_exposure', 'replacement_value')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('rma_exposure', 'replacement_value', 'money')">
+                                                <span>Replacement Value</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('rma_exposure', 'replacement_value')}"/>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="tableRows('rma_exposure', dashboard.rma_exposure || [])" t-as="row" t-key="row.id">
+                                        <tr class="o_unico_clickable" t-on-click="() => this.openRecord('rma.main', row.id)">
+                                            <td t-esc="row.name"/>
+                                            <td t-esc="row.customer"/>
+                                            <td t-esc="row.state"/>
+                                            <td class="text-end" t-esc="formatMoney(row.return_value)"/>
+                                            <td class="text-end" t-esc="formatMoney(row.replacement_value)"/>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div t-if="isTablePaginationVisible(dashboard.rma_exposure || [])" class="o_unico_table_pagination">
+                                <span t-esc="tablePageSummary('rma_exposure', dashboard.rma_exposure || [])"/>
+                                <div>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('rma_exposure', dashboard.rma_exposure || []) &lt;= 1"
+                                            t-on-click="() => this.previousTablePage('rma_exposure')">Previous</button>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('rma_exposure', dashboard.rma_exposure || []) &gt;= tablePageCount(dashboard.rma_exposure || [])"
+                                            t-on-click="() => this.nextTablePage('rma_exposure', dashboard.rma_exposure || [])">Next</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="o_unico_financial_section">
+                            <div class="o_unico_financial_section_header">
+                                <div>
+                                    <h2>Payment &amp; Collection Exceptions</h2>
+                                    <p class="o_unico_trend_range">
+                                        Shows open collection issues that may require follow-up, including unpaid invoices and Stripe payments that failed or are still processing.
+                                    </p>
+                                </div>
+                            </div>
+                            <table class="table table-sm o_unico_financial_table">
+                                <thead>
+                                    <tr>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('payment_exceptions', 'name')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('payment_exceptions', 'name', 'text')">
+                                                <span>Reference</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('payment_exceptions', 'name')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('payment_exceptions', 'customer')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('payment_exceptions', 'customer', 'text')">
+                                                <span>Customer</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('payment_exceptions', 'customer')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('payment_exceptions', 'state')">
+                                            <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('payment_exceptions', 'state', 'text')">
+                                                <span>Status</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('payment_exceptions', 'state')}"/>
+                                            </button>
+                                        </th>
+                                        <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('payment_exceptions', 'residual')">
+                                            <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('payment_exceptions', 'residual', 'money')">
+                                                <span>Open / Exception Amount</span>
+                                                <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('payment_exceptions', 'residual')}"/>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="tableRows('payment_exceptions', dashboard.payment_exceptions || [])" t-as="row" t-key="row.name + row.state">
+                                        <tr t-att-class="row.model &amp;&amp; row.id ? 'o_unico_clickable' : ''"
+                                            t-on-click="() => this.openRecord(row.model, row.id)">
+                                            <td t-esc="row.name"/>
+                                            <td t-esc="row.customer"/>
+                                            <td t-esc="row.status_label || row.state"/>
+                                            <td class="text-end" t-esc="formatMoney(row.residual)"/>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div t-if="isTablePaginationVisible(dashboard.payment_exceptions || [])" class="o_unico_table_pagination">
+                                <span t-esc="tablePageSummary('payment_exceptions', dashboard.payment_exceptions || [])"/>
+                                <div>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('payment_exceptions', dashboard.payment_exceptions || []) &lt;= 1"
+                                            t-on-click="() => this.previousTablePage('payment_exceptions')">Previous</button>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            t-att-disabled="currentTablePage('payment_exceptions', dashboard.payment_exceptions || []) &gt;= tablePageCount(dashboard.payment_exceptions || [])"
+                                            t-on-click="() => this.nextTablePage('payment_exceptions', dashboard.payment_exceptions || [])">Next</button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section id="unico_financial_delivery" class="o_unico_financial_section">
+                        <div class="o_unico_financial_section_header">
+                            <h2>Unpaid Delivery Orders</h2>
+                        </div>
+                        <table class="table table-sm o_unico_financial_table">
+                            <thead>
+                                <tr>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('unpaid_delivery_orders', 'name')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('unpaid_delivery_orders', 'name', 'text')">
+                                            <span>Order</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('unpaid_delivery_orders', 'name')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('unpaid_delivery_orders', 'customer')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('unpaid_delivery_orders', 'customer', 'text')">
+                                            <span>Customer</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('unpaid_delivery_orders', 'customer')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th" t-att-aria-sort="tableAriaSort('unpaid_delivery_orders', 'date')">
+                                        <button type="button" class="o_unico_table_sort_button" t-on-click="() => this.sortTable('unpaid_delivery_orders', 'date', 'text')">
+                                            <span>Date</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('unpaid_delivery_orders', 'date')}"/>
+                                        </button>
+                                    </th>
+                                    <th class="o_unico_sortable_th text-end" t-att-aria-sort="tableAriaSort('unpaid_delivery_orders', 'amount')">
+                                        <button type="button" class="o_unico_table_sort_button text-end" t-on-click="() => this.sortTable('unpaid_delivery_orders', 'amount', 'money')">
+                                            <span>Amount</span>
+                                            <i t-attf-class="o_unico_sort_indicator #{tableSortIndicatorClass('unpaid_delivery_orders', 'amount')}"/>
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="tableRows('unpaid_delivery_orders', dashboard.unpaid_delivery_orders || [])" t-as="row" t-key="row.id">
+                                    <tr class="o_unico_clickable" t-on-click="() => this.openRecord('sale.order', row.id)">
+                                        <td t-esc="row.name"/>
+                                        <td t-esc="row.customer"/>
+                                        <td t-esc="row.date"/>
+                                        <td class="text-end" t-esc="formatMoney(row.amount)"/>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        <div t-if="isTablePaginationVisible(dashboard.unpaid_delivery_orders || [])" class="o_unico_table_pagination">
+                            <span t-esc="tablePageSummary('unpaid_delivery_orders', dashboard.unpaid_delivery_orders || [])"/>
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('unpaid_delivery_orders', dashboard.unpaid_delivery_orders || []) &lt;= 1"
+                                        t-on-click="() => this.previousTablePage('unpaid_delivery_orders')">Previous</button>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        t-att-disabled="currentTablePage('unpaid_delivery_orders', dashboard.unpaid_delivery_orders || []) &gt;= tablePageCount(dashboard.unpaid_delivery_orders || [])"
+                                        t-on-click="() => this.nextTablePage('unpaid_delivery_orders', dashboard.unpaid_delivery_orders || [])">Next</button>
+                            </div>
+                        </div>
+                    </section>
+                        </main>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

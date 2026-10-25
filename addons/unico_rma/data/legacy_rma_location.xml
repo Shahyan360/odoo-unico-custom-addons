@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="stock_location_legacy_sage_customer_returns" model="stock.location">
+        <field name="name">Legacy Sage Customer Returns</field>
+        <field name="usage">customer</field>
+    </record>
+</odoo>

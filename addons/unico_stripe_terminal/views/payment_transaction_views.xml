@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_transaction_form_manual_confirm" model="ir.ui.view">
+        <field name="name">payment.transaction.form.manual.confirm</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button type="object"
+                        name="action_manual_confirm_payment"
+                        string="Manually Confirm Payment"
+                        class="oe_highlight"
+                        invisible="state != 'pending'"
+                        groups="account.group_account_invoice"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

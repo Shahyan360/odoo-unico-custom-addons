@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The board proper. Columns are stage records, so dragging a card writes
+         stage_id — which pins the stage (see UnicoWipItem.write). -->
+    <record id="view_unico_wip_item_kanban" model="ir.ui.view">
+        <field name="name">unico.wip.item.kanban</field>
+        <field name="model">unico.wip.item</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="stage_id"
+                    class="o_kanban_small_column"
+                    create="false"
+                    sample="1">
+                <field name="stage_id"/>
+                <field name="urgency"/>
+                <field name="blocked"/>
+                <field name="stage_disagrees"/>
+                <progressbar field="urgency"
+                             colors='{"overdue": "danger", "at_risk": "warning", "on_track": "success"}'
+                             sum_field="amount_untaxed"/>
+                <templates>
+                    <t t-name="card">
+                        <main>
+                            <div class="d-flex justify-content-between align-items-start">
+                                <field name="order_id" class="fw-bold fs-5"/>
+                                <field name="amount_untaxed" widget="monetary"
+                                       class="fw-bold"/>
+                            </div>
+                            <div class="text-muted d-flex flex-column">
+                                <field name="partner_id" options="{'no_open': True}"/>
+                                <field name="product_summary" class="text-truncate"/>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                <span t-if="record.blocked.raw_value"
+                                      class="badge text-bg-danger">Blocked</span>
+                                <span t-if="record.stage_disagrees.raw_value"
+                                      class="badge text-bg-warning"
+                                      title="Pinned by hand, away from the detected stage">Pinned</span>
+                                <span t-if="record.urgency.raw_value === 'overdue'"
+                                      class="badge text-bg-danger">
+                                    <field name="delay_days"/> day(s) late
+                                </span>
+                                <span t-elif="record.urgency.raw_value === 'at_risk'"
+                                      class="badge text-bg-warning">At risk</span>
+                            </div>
+                            <div t-if="record.supplier_names.raw_value"
+                                 class="text-muted small mt-1">
+                                <i class="fa fa-shopping-cart me-1" title="Supplier"/>
+                                <field name="supplier_names"/>
+                                <field name="po_numbers" class="ms-1"/>
+                            </div>
+                            <div t-if="record.blocker_note.raw_value"
+                                 class="small mt-1 fst-italic text-truncate">
+                                <field name="blocker_note"/>
+                            </div>
+                            <footer class="pt-1">
+                                <field name="expected_date" widget="remaining_days"/>
+                                <div class="d-flex ms-auto align-items-center gap-1">
+                                    <field name="activity_ids" widget="kanban_activity"/>
+                                    <field name="owner_id" widget="many2one_avatar_user"/>
+                                </div>
+                            </footer>
+                        </main>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Order-grain list: the printable / exportable view of the same board.
+         Only the ops fields are editable; everything factual is read-only and
+         comes from the order. -->
+    <record id="view_unico_wip_item_list" model="ir.ui.view">
+        <field name="name">unico.wip.item.list</field>
+        <field name="model">unico.wip.item</field>
+        <field name="arch" type="xml">
+            <list string="Work in Progress" create="false" multi_edit="1"
+                  editable="bottom"
+                  decoration-danger="urgency == 'overdue' or blocked"
+                  decoration-warning="urgency == 'at_risk'">
+                <field name="order_id" string="Order" readonly="1"/>
+                <!-- This list is editable so the blocker note can be typed
+                     inline, which means a row click starts editing rather than
+                     navigating. An explicit button is therefore the only way to
+                     reach the sales order from here. -->
+                <button name="action_open_order" type="object"
+                        icon="fa-external-link"
+                        title="Open Sales Order"
+                        aria-label="Open Sales Order"/>
+                <field name="partner_id" readonly="1"/>
+                <field name="product_summary" string="Products Ordered"
+                       readonly="1" optional="show"/>
+                <field name="stage_id" string="Stage" widget="badge" readonly="1"/>
+                <field name="stage_override" string="Pinned"
+                       widget="boolean_toggle" optional="hide"/>
+                <field name="expected_date" string="Expected Delivery" readonly="1"/>
+                <field name="delay_days" string="Days Late" readonly="1"
+                       optional="show"/>
+                <field name="supplier_names" string="Supplier(s)" readonly="1"
+                       optional="show"/>
+                <field name="po_numbers" string="PO Number(s)" readonly="1"
+                       optional="show"/>
+                <field name="amount_untaxed" string="Sales Value"
+                       sum="Sales Value" readonly="1"/>
+                <field name="estimated_cost" string="Estimated Cost"
+                       sum="Estimated Cost" readonly="1" optional="show"/>
+                <field name="margin" string="Expected Margin"
+                       sum="Expected Margin" readonly="1" optional="show"/>
+                <field name="margin_percent" string="Margin %"
+                       widget="percentage" readonly="1" optional="hide"/>
+                <field name="payment_status" string="Payment" widget="badge"
+                       readonly="1"
+                       decoration-danger="payment_status == 'not_paid'"
+                       decoration-success="payment_status == 'paid'"/>
+                <!-- The ops layer: the only editable columns. -->
+                <field name="owner_id" string="Responsible"
+                       widget="many2one_avatar_user"/>
+                <field name="blocked" string="Blocked" widget="boolean_toggle"/>
+                <field name="blocker_note" string="Delay / Blocker Note"/>
+                <field name="urgency" column_invisible="1"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="delivery_status" widget="badge" readonly="1"
+                       optional="hide"/>
+                <field name="po_count" string="POs" readonly="1" optional="hide"/>
+                <field name="user_id" string="Salesperson" readonly="1"
+                       optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_unico_wip_item_form" model="ir.ui.view">
+        <field name="name">unico.wip.item.form</field>
+        <field name="model">unico.wip.item</field>
+        <field name="arch" type="xml">
+            <form string="WIP Tracker" create="false">
+                <header>
+                    <field name="stage_id" widget="statusbar"
+                           options="{'clickable': '1'}"/>
+                    <button name="action_clear_stage_override" type="object"
+                            string="Unpin Stage" class="btn-secondary"
+                            invisible="not stage_override"
+                            help="Hand stage control back to the automatic detector."/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_order" type="object"
+                                class="oe_stat_button" icon="fa-file-text-o">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Sales</span>
+                                <span class="o_stat_text">Order</span>
+                            </div>
+                        </button>
+                        <button name="action_view_purchases" type="object"
+                                class="oe_stat_button" icon="fa-shopping-cart"
+                                invisible="po_count == 0">
+                            <field name="po_count" widget="statinfo"
+                                   string="Purchases"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="order_id" readonly="1" options="{'no_open': True}"/></h1>
+                    </div>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not stage_disagrees">
+                        This order's stage was pinned by hand and no longer matches
+                        what the system detects — compare <b>Stage</b> above with
+                        <b>Detected Stage</b> below, then use <b>Unpin Stage</b> to
+                        hand control back.
+                    </div>
+                    <group>
+                        <group string="Customer &amp; Order">
+                            <field name="partner_id" readonly="1"/>
+                            <field name="product_summary" readonly="1"/>
+                            <field name="order_state" readonly="1"/>
+                            <field name="fulfillment_type" readonly="1"/>
+                        </group>
+                        <group string="Schedule">
+                            <field name="expected_date" readonly="1"/>
+                            <field name="commitment_date" readonly="1"/>
+                            <field name="urgency" readonly="1"/>
+                            <field name="delay_days" readonly="1"/>
+                        </group>
+                        <group string="Financials">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="amount_untaxed" readonly="1"/>
+                            <field name="estimated_cost" readonly="1"/>
+                            <field name="margin" readonly="1"/>
+                            <field name="margin_percent" widget="percentage" readonly="1"/>
+                            <field name="payment_status" readonly="1"/>
+                        </group>
+                        <group string="Procurement">
+                            <field name="supplier_names" readonly="1"/>
+                            <field name="po_numbers" readonly="1"/>
+                            <field name="delivery_status" readonly="1"/>
+                            <field name="auto_stage_id" readonly="1"/>
+                            <field name="stage_override" readonly="1"/>
+                            <field name="stage_disagrees" invisible="1"/>
+                        </group>
+                        <group string="Ownership &amp; Escalation" colspan="2">
+                            <field name="owner_id" widget="many2one_avatar_user"/>
+                            <field name="blocked"/>
+                            <field name="blocker_note"
+                                   placeholder="What is holding this order up, and who is chasing it?"/>
+                        </group>
+                    </group>
+                    <field name="purchase_ids" readonly="1" invisible="po_count == 0">
+                        <list string="Purchases" create="false">
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="state"/>
+                            <field name="receipt_status"/>
+                            <field name="amount_total"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_unico_wip_item_pivot" model="ir.ui.view">
+        <field name="name">unico.wip.item.pivot</field>
+        <field name="model">unico.wip.item</field>
+        <field name="arch" type="xml">
+            <pivot string="WIP Analysis">
+                <field name="stage_id" type="row"/>
+                <field name="urgency" type="col"/>
+                <field name="amount_untaxed" type="measure"/>
+                <field name="estimated_cost" type="measure"/>
+                <field name="margin" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_unico_wip_item_graph" model="ir.ui.view">
+        <field name="name">unico.wip.item.graph</field>
+        <field name="model">unico.wip.item</field>
+        <field name="arch" type="xml">
+            <graph string="WIP Value by Stage" type="bar">
+                <field name="stage_id"/>
+                <field name="amount_untaxed" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Filters mirror the dashboard tiles one-for-one, so a tile drill-down
+         and the equivalent filter always return the same rows. -->
+    <record id="view_unico_wip_item_search" model="ir.ui.view">
+        <field name="name">unico.wip.item.search</field>
+        <field name="model">unico.wip.item</field>
+        <field name="arch" type="xml">
+            <search string="Work in Progress">
+                <field name="order_id" string="Order"/>
+                <field name="partner_id"/>
+                <field name="owner_id" string="Responsible"/>
+                <field name="stage_id"/>
+                <field name="po_numbers" string="PO Number"/>
+                <field name="supplier_names" string="Supplier"/>
+                <field name="product_summary" string="Product"/>
+
+                <filter name="wip_overdue" string="Overdue"
+                        domain="[('urgency', '=', 'overdue')]"/>
+                <filter name="wip_at_risk" string="At Risk"
+                        domain="[('urgency', '=', 'at_risk')]"/>
+                <filter name="wip_on_track" string="On Track"
+                        domain="[('urgency', '=', 'on_track')]"/>
+                <separator/>
+                <filter name="wip_blocked" string="Flagged / Blocked"
+                        domain="[('blocked', '=', True)]"/>
+                <filter name="wip_pinned" string="Stage Pinned"
+                        domain="[('stage_override', '=', True)]"/>
+                <filter name="wip_disagrees" string="Pinned Off Detected Stage"
+                        domain="[('stage_disagrees', '=', True)]"/>
+                <separator/>
+                <filter name="wip_unpaid" string="Unpaid"
+                        domain="[('payment_status', '=', 'not_paid')]"/>
+                <filter name="wip_open_stage" string="Open Stages Only"
+                        domain="[('stage_id.is_closed', '=', False)]"/>
+                <separator/>
+                <filter name="my_wip" string="My Orders"
+                        domain="[('owner_id', '=', uid)]"/>
+                <separator/>
+                <filter name="wip_archived" string="Archived" domain="[('active', '=', False)]"/>
+
+                <group>
+                    <filter name="group_by_stage" string="Stage"
+                            context="{'group_by': 'stage_id'}"/>
+                    <filter name="group_by_urgency" string="Urgency"
+                            context="{'group_by': 'urgency'}"/>
+                    <filter name="group_by_customer" string="Customer"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_by_owner" string="Responsible"
+                            context="{'group_by': 'owner_id'}"/>
+                    <filter name="group_by_payment" string="Payment Status"
+                            context="{'group_by': 'payment_status'}"/>
+                    <filter name="group_by_expected" string="Expected Delivery"
+                            context="{'group_by': 'expected_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

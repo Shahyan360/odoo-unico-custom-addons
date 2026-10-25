@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Show how much of a payment is still free to apply. Odoo only exposes
+         a yes/no "is reconciled" flag, so a partly-applied payment looks the
+         same as an untouched one and the counter has to open the journal
+         items to find the receivable/payable residual. -->
+    <record id="view_account_payment_form_unico_allocation" model="ir.ui.view">
+        <field name="name">account.payment.form.unico.allocation</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <field name="memo" position="after">
+                <field name="unico_amount_unallocated"
+                       invisible="state in ('draft', 'canceled', 'rejected')"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_account_payment_tree_unico_allocation" model="ir.ui.view">
+        <field name="name">account.payment.list.unico.allocation</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_tree"/>
+        <field name="arch" type="xml">
+            <!-- Last column: state is the final field in the core list. -->
+            <field name="state" position="after">
+                <field name="unico_amount_unallocated" optional="show" sum="Total"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_account_payment_search_unico_allocation" model="ir.ui.view">
+        <field name="name">account.payment.search.unico.allocation</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_search"/>
+        <field name="arch" type="xml">
+            <filter name="reconciled" position="after">
+                <filter name="filter_unico_unallocated" string="Has Unallocated Amount"
+                        domain="[('unico_amount_unallocated', '&gt;', 0)]"/>
+            </filter>
+        </field>
+    </record>
+
+</odoo>

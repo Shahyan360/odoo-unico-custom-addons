@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_provider_form_stripe_terminal" model="ir.ui.view">
+        <field name="name">payment.provider.form.stripe.terminal</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='pre_msg']" position="after">
+                <field name="ach_pre_msg" invisible="code != 'stripe'"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Stripe Terminal" name="stripe_terminal"
+                      invisible="code != 'stripe'">
+                    <field name="company_id" invisible="1"/>
+                    <div class="alert alert-info" role="status">
+                        Collect in-person card payments on Stripe Terminal readers
+                        from a Sales Order. Enter your API keys in the
+                        <b>Credentials</b> tab, set the journal in
+                        <b>Configuration</b>, then sync your readers below.
+                    </div>
+                    <group>
+                        <field name="stripe_terminal_default_location_id"/>
+                    </group>
+                    <group string="Cash Collection">
+                        <field name="unico_cash_journal_id"
+                               options="{'no_create': True}"/>
+                        <!-- A payment method line belongs to one journal, so it
+                             can only be chosen once the journal is. -->
+                        <field name="unico_cash_payment_method_line_id"
+                               options="{'no_create': True, 'no_open': True}"
+                               context="{'hide_payment_journal_id': True}"
+                               readonly="not unico_cash_journal_id"
+                               placeholder="Journal default"/>
+                    </group>
+                    <group string="Setup Actions" col="4">
+                        <button name="action_stripe_terminal_test_connection"
+                                type="object" string="Test Connection"
+                                class="btn-primary" colspan="1"/>
+                        <button name="action_stripe_terminal_sync_locations"
+                                type="object" string="Sync Locations"
+                                class="btn-secondary" colspan="1"/>
+                        <button name="action_stripe_terminal_sync_readers"
+                                type="object" string="Sync Readers"
+                                class="btn-secondary" colspan="1"/>
+                        <button name="action_stripe_terminal_create_simulated_reader"
+                                type="object" string="Create Simulated Reader"
+                                class="btn-secondary" colspan="1"
+                                invisible="state != 'test'"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

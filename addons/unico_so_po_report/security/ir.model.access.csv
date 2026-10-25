@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_unico_so_po_report_wizard_sale_manager,unico.so.po.report.wizard sales manager,model_unico_so_po_report_wizard,sales_team.group_sale_manager,1,1,1,1
+access_unico_so_po_report_wizard_purchase_user,unico.so.po.report.wizard purchase user,model_unico_so_po_report_wizard,purchase.group_purchase_user,1,1,1,1

@@ -1,0 +1,42 @@
+.o_sale_dashboard {
+    .o_sale_dashboard_card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 0.25rem;
+        height: 100%;
+        border: 1px solid var(--border-color, #dee2e6);
+        border-radius: 0.375rem;
+        background-color: var(--o-view-background-color, #fff);
+        color: inherit;
+        text-decoration: none;
+        transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+
+        &:hover {
+            background-color: var(--gray-100, #f8f9fa);
+            border-color: var(--primary, #714b67);
+            text-decoration: none;
+        }
+
+        .o_value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .o_label {
+            font-size: 0.85rem;
+            color: var(--gray-600, #6c757d);
+            text-align: center;
+        }
+
+        &.o_sale_dashboard_card_warn .o_value {
+            color: var(--danger, #d9534f);
+        }
+
+        &.o_sale_dashboard_card_ok .o_value {
+            color: var(--success, #28a745);
+        }
+    }
+}

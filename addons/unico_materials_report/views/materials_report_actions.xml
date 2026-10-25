@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Order-grain list action (printable / exportable). -->
+    <record id="action_unico_waiting_materials_orders" model="ir.actions.act_window">
+        <field name="name">Waiting on Materials (Orders)</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_unico_waiting_materials_order_list"/>
+        <field name="search_view_id" ref="view_unico_waiting_materials_order_search"/>
+        <field name="domain">[('unico_waiting_on_materials', '=', True)]</field>
+        <field name="context">{'create': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No confirmed orders are waiting on materials</p>
+            <p>Confirmed sales orders appear here while they cannot yet be
+               fulfilled — because a normal product is short on stock, a
+               configured/special door is waiting on manufacturing components
+               (its SFP pick), or a special-order purchase has not arrived.</p>
+        </field>
+    </record>
+
+    <!-- Line-grain breakdown action. -->
+    <record id="action_unico_waiting_materials_lines" model="ir.actions.act_window">
+        <field name="name">Waiting on Materials (Lines)</field>
+        <field name="res_model">sale.order.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_unico_waiting_materials_line_list"/>
+        <field name="search_view_id" ref="view_unico_waiting_materials_line_search"/>
+        <field name="domain">[('unico_material_waiting', '=', True)]</field>
+        <field name="context">{'create': False}</field>
+    </record>
+
+    <!-- Owl dashboard (tiles + drill-down). -->
+    <record id="action_unico_materials_dashboard" model="ir.actions.client">
+        <field name="name">Waiting on Materials</field>
+        <field name="tag">unico_materials_report.dashboard</field>
+    </record>
+
+    <!-- Menus under Sales > Reporting. -->
+    <menuitem id="menu_unico_materials_root"
+              name="Waiting on Materials"
+              parent="sale.menu_sale_report"
+              sequence="90"
+              groups="sales_team.group_sale_salesman"/>
+    <menuitem id="menu_unico_materials_dashboard"
+              name="Dashboard"
+              parent="menu_unico_materials_root"
+              action="action_unico_materials_dashboard"
+              sequence="10"/>
+    <!-- <menuitem id="menu_unico_materials_orders"
+              name="Orders"
+              parent="menu_unico_materials_root"
+              action="action_unico_waiting_materials_orders"
+              sequence="20"/>
+    <menuitem id="menu_unico_materials_lines"
+              name="Line Breakdown"
+              parent="menu_unico_materials_root"
+              action="action_unico_waiting_materials_lines"
+              sequence="30"/> -->
+
+</odoo>

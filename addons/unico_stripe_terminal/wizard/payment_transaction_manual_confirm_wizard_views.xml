@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_transaction_manual_confirm_form" model="ir.ui.view">
+        <field name="name">payment.transaction.manual.confirm.form</field>
+        <field name="model">payment.transaction.manual.confirm</field>
+        <field name="arch" type="xml">
+            <form string="Manually Confirm Payment">
+                <field name="transaction_id" invisible="1"/>
+                <field name="currency_id" invisible="1"/>
+                <div class="alert alert-warning" role="alert">
+                    You are confirming this payment before the provider has
+                    reported the funds as cleared. The payment will be posted and
+                    reconciled immediately. Only do this for trusted customers.
+                </div>
+                <group>
+                    <field name="reference"/>
+                    <field name="partner_id"/>
+                    <field name="amount" widget="monetary"/>
+                </group>
+                <group>
+                    <field name="reason" placeholder="e.g. ACH pending; customer is trusted, releasing per Mike's approval."/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Confirm Payment"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

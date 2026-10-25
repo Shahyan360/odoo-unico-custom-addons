@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Split the Delivery Orders dashboard card counts by fulfillment type. -->
+    <record id="stock_picking_type_kanban_fulfillment" model="ir.ui.view">
+        <field name="name">stock.picking.type.kanban.fulfillment</field>
+        <field name="model">stock.picking.type</field>
+        <field name="inherit_id" ref="stock.stock_picking_type_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='picking_type_backorder_count']" position="before">
+                <div t-if="record.code.raw_value === 'outgoing' &amp;&amp; record.count_picking_delivery.raw_value > 0"
+                     class="row" name="picking_type_delivery_count">
+                    <a class="col-8 offset-4 pe-0 text-truncate"
+                       name="get_action_picking_tree_delivery" type="object">
+                        <div class="row">
+                            <span class="col-6 text-truncate">Delivery</span>
+                            <field class="col-2 text-end" name="count_picking_delivery"/>
+                        </div>
+                    </a>
+                </div>
+                <div t-if="record.code.raw_value === 'outgoing' &amp;&amp; record.count_picking_pickup.raw_value > 0"
+                     class="row" name="picking_type_pickup_count">
+                    <a class="col-8 offset-4 pe-0 text-truncate"
+                       name="get_action_picking_tree_pickup" type="object">
+                        <div class="row">
+                            <span class="col-6 text-truncate" title="Will Call/Customer Pickup">Will Call/Customer Pickup</span>
+                            <field class="col-2 text-end" name="count_picking_pickup"/>
+                        </div>
+                    </a>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

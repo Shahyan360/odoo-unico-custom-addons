@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Delivery Slip: print the sale order line description (and the CPQ
+         configuration breakdown) under each product, and list configured
+         products one row per unit — each configured door is individually
+         built, so three of them are three products, not a quantity of 3.
+
+         The done-state table is driven by ``_get_aggregated_product_quantities``
+         and needs no template change; only the not-yet-done table and the
+         serial-number rows are patched here. -->
+    <template id="report_delivery_document_unico_line_description"
+              inherit_id="stock.report_delivery_document">
+
+        <!-- Not-yet-done transfers: rebuild the row off the split payload. -->
+        <xpath expr="//table[@name='stock_move_table']//tr[@t-foreach='lines']" position="replace">
+            <tr t-foreach="lines._unico_delivery_slip_move_rows()" t-as="unico_row">
+                <t t-set="move" t-value="unico_row['move']"/>
+                <td>
+                    <span t-field="move.product_id">Customizable Desk</span>
+                    <p t-if="unico_row['description']">
+                        <span t-out="unico_row['description']" t-options="{'widget': 'text'}">Description on transfer</span>
+                    </p>
+                </td>
+                <td class="o_td_quantity text-end">
+                    <span t-out="format_number(unico_row['product_uom_qty'])" class="text-nowrap">3.00</span>
+                    <span t-field="move.product_uom" groups="uom.group_uom">units</span>
+                    <t t-if="move.packaging_uom_id != move.product_uom" groups="uom.group_uom">
+                        <br/>
+                        <span class="text-muted" t-out="move.product_uom._compute_quantity(unico_row['product_uom_qty'], move.packaging_uom_id)">1.00</span>
+                        <span class="text-muted" t-field="move.packaging_uom_id">Pack of 6</span>
+                    </t>
+                </td>
+                <td class="o_td_quantity text-end">
+                    <span t-out="format_number(unico_row['quantity'])" class="text-nowrap">3.00</span>
+                    <span t-field="move.product_uom" groups="uom.group_uom">units</span>
+                    <t t-if="move.packaging_uom_id != move.product_uom" groups="uom.group_uom">
+                        <br/>
+                        <span class="text-muted" t-out="move.product_uom._compute_quantity(unico_row['quantity'], move.packaging_uom_id)">1.00</span>
+                        <span class="text-muted" t-field="move.packaging_uom_id">Pack of 6</span>
+                    </t>
+                </td>
+            </tr>
+        </xpath>
+
+        <!-- Remaining-quantities table: same description as the lines above. -->
+        <xpath expr="//table[@name='stock_backorder_table']//p" position="replace">
+            <t t-set="unico_backorder_description" t-value="bo_line._unico_delivery_slip_description()"/>
+            <p t-if="unico_backorder_description">
+                <span t-out="unico_backorder_description" t-options="{'widget': 'text'}">Description on transfer</span>
+            </p>
+        </xpath>
+    </template>
+
+    <!-- Lot/serial rows are printed per move line instead of aggregated, so
+         they bypass ``_get_aggregated_properties``. Pre-set the description
+         the way the core template expects callers to (it only falls back to
+         ``description_picking`` when nothing was set). -->
+    <template id="stock_report_delivery_has_serial_move_line_unico"
+              inherit_id="stock.stock_report_delivery_has_serial_move_line">
+        <xpath expr="//span[@t-field='move_line.product_id']" position="before">
+            <t t-if="not description and description != ''">
+                <t t-set="description" t-value="move_line.move_id._unico_delivery_slip_description()"/>
+            </t>
+        </xpath>
+    </template>
+</odoo>

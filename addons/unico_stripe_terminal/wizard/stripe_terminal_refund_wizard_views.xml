@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="stripe_terminal_refund_wizard_form" model="ir.ui.view">
+        <field name="name">stripe.terminal.refund.wizard.form</field>
+        <field name="model">stripe.terminal.refund.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Refund Payment">
+                <sheet>
+                    <field name="payment_id" invisible="1"/>
+                    <field name="currency_id" invisible="1"/>
+                    <group>
+                        <field name="payment_amount"/>
+                        <field name="refunded_amount" invisible="not refunded_amount"/>
+                        <field name="amount_available_for_refund"/>
+                        <field name="amount_to_refund"/>
+                        <field name="surcharge_to_refund" readonly="1"
+                               invisible="not surcharge_to_refund"/>
+                        <field name="total_to_refund" readonly="1"/>
+                    </group>
+                    <div class="alert alert-info" role="status">
+                        The selected amount will be refunded to the customer's card via
+                        Stripe and booked against the original payment. The proportional
+                        customer surcharge shown above is refunded in the same transaction.
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_refund" type="object" string="Refund"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

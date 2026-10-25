@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="project_local_door_deliveries" model="project.project">
+            <field name="name">Local Door Deliveries</field>
+            <field name="label_tasks">Deliveries</field>
+            <field name="privacy_visibility">employees</field>
+        </record>
+
+        <record id="stage_waiting_for_production" model="project.task.type">
+            <field name="name">Waiting for Production</field>
+            <field name="sequence">10</field>
+            <field name="project_ids" eval="[(4, ref('project_local_door_deliveries'))]"/>
+        </record>
+        <record id="stage_ready_for_dispatch" model="project.task.type">
+            <field name="name">Ready for Dispatch</field>
+            <field name="sequence">20</field>
+            <field name="project_ids" eval="[(4, ref('project_local_door_deliveries'))]"/>
+        </record>
+        <record id="stage_scheduled" model="project.task.type">
+            <field name="name">Scheduled</field>
+            <field name="sequence">30</field>
+            <field name="project_ids" eval="[(4, ref('project_local_door_deliveries'))]"/>
+        </record>
+        <record id="stage_out_for_delivery" model="project.task.type">
+            <field name="name">Out for Delivery</field>
+            <field name="sequence">40</field>
+            <field name="project_ids" eval="[(4, ref('project_local_door_deliveries'))]"/>
+        </record>
+        <record id="stage_delivered" model="project.task.type">
+            <field name="name">Delivered</field>
+            <field name="sequence">50</field>
+            <field name="fold">True</field>
+            <field name="project_ids" eval="[(4, ref('project_local_door_deliveries'))]"/>
+        </record>
+        <record id="stage_delivery_issue" model="project.task.type">
+            <field name="name">Delivery Issue</field>
+            <field name="sequence">60</field>
+            <field name="project_ids" eval="[(4, ref('project_local_door_deliveries'))]"/>
+        </record>
+        <record id="stage_cancelled" model="project.task.type">
+            <field name="name">Cancelled</field>
+            <field name="sequence">70</field>
+            <field name="fold">True</field>
+            <field name="project_ids" eval="[(4, ref('project_local_door_deliveries'))]"/>
+        </record>
+    </data>
+</odoo>

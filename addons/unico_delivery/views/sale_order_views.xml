@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Delivery Date (commitment_date) stays empty on the quotation and is
+         derived from the order's customer lead time on confirmation. The field
+         is locked; only Sales Managers may set or clear it by hand. -->
+    <record id="sale_order_form_delivery_date_lock" model="ir.ui.view">
+        <field name="name">sale.order.form.unico.delivery-date-lock</field>
+        <field name="model">sale.order</field>
+        <!-- commitment_date is introduced by sale_stock's form extension; inherit
+             that view so the field is guaranteed present for our attributes. -->
+        <field name="inherit_id" ref="sale_stock.view_order_form_inherit_sale_stock"/>
+        <field name="arch" type="xml">
+            <field name="commitment_date" position="before">
+                <field name="unico_delivery_date_readonly" invisible="1"/>
+            </field>
+            <field name="commitment_date" position="attributes">
+                <attribute name="readonly">unico_delivery_date_readonly</attribute>
+            </field>
+        </field>
+    </record>
+
+    <!-- Fulfillment type field, placed right below the Quotation Template field. -->
+    <record id="sale_order_form_fulfillment" model="ir.ui.view">
+        <field name="name">sale.order.form.fulfillment</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_management.sale_order_form_quote"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='sale_order_template_id']" position="after">
+                <field name="fulfillment_type"/>
+            </xpath>
+            <!-- "Paid" ribbon shown once the order is fully collected. -->
+            <xpath expr="//sheet/*[1]" position="before">
+                <widget name="web_ribbon" title="Paid" bg_color="text-bg-success"
+                        invisible="unico_payment_status != 'paid'"/>
+                <widget name="web_ribbon" title="Returned/Credited"
+                        bg_color="text-bg-info"
+                        invisible="unico_payment_status != 'returned_credited'"/>
+                <field name="unico_payment_status" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Show the commitment date as a retained 2nd column on the sale order
+         list (it ships in the base list but hidden and in 3rd position). -->
+    <record id="sale_order_tree_commitment_date" model="ir.ui.view">
+        <field name="name">sale.order.list.commitment-date</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.sale_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="commitment_date" position="move"/>
+            </xpath>
+            <xpath expr="//field[@name='commitment_date']" position="attributes">
+                <attribute name="optional">show</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Group-by filter on the fulfillment type + invisible filters driving the
+         Sales list-view dashboard banner tiles. -->
+    <record id="sale_order_view_search_fulfillment" model="ir.ui.view">
+        <field name="name">sale.order.search.fulfillment</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='customer']" position="after">
+                <filter name="fulfillment_type"
+                        string="Fulfillment Type"
+                        context="{'group_by': 'fulfillment_type'}"/>
+                <filter name="group_by_payment_status"
+                        string="Payment Status"
+                        context="{'group_by': 'unico_payment_status'}"/>
+            </xpath>
+            <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
+                <separator/>
+                <filter name="filter_dashboard_delivery" string="Delivery"
+                        domain="[('fulfillment_type', '=', 'delivery')]"/>
+                <filter name="filter_dashboard_will_call" string="Will Call/Customer Pickup"
+                        domain="[('fulfillment_type', '=', 'will_call')]"/>
+                <filter name="filter_dashboard_quotation" string="Quotations"
+                        domain="[('state', 'in', ('draft', 'sent'))]"/>
+                <filter name="filter_dashboard_sale_order" string="Sales Orders"
+                        domain="[('state', '=', 'sale')]"/>
+                <filter name="filter_dashboard_unpaid" string="Unpaid Orders"
+                        domain="[('state', '=', 'sale'), ('unico_payment_status', '=', 'not_paid')]"/>
+                <filter name="filter_dashboard_paid" string="Paid Orders"
+                        domain="[('state', '=', 'sale'), ('unico_payment_status', '=', 'paid')]"/>
+                <filter name="filter_dashboard_returned_credited" string="Returned/Credited Orders"
+                        domain="[('state', '=', 'sale'), ('unico_payment_status', '=', 'returned_credited')]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Attach the dashboard renderer to the Sales Orders list view. -->
+    <record id="sale_order_list_upload_dashboard" model="ir.ui.view">
+        <field name="name">sale.order.list.dashboard</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.sale_order_list_upload"/>
+        <field name="arch" type="xml">
+            <list position="attributes">
+                <attribute name="js_class">sale_dashboard_list</attribute>
+            </list>
+        </field>
+    </record>
+
+    <!-- Attach the dashboard renderer to the Quotations list view. -->
+    <record id="view_quotation_tree_with_onboarding_dashboard" model="ir.ui.view">
+        <field name="name">sale.order.quotation.list.dashboard</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_quotation_tree_with_onboarding"/>
+        <field name="arch" type="xml">
+            <list position="attributes">
+                <attribute name="js_class">sale_onboarding_dashboard_list</attribute>
+            </list>
+        </field>
+    </record>
+
+</odoo>

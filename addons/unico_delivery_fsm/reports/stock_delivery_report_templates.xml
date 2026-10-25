@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Delivery Slip (outgoing): customer name on top, distinct Shipping Address
+         section. Incoterm location remains a separate location note. Receipts and
+         internal transfers are left untouched. -->
+    <template id="report_delivery_document_unico_incoterm"
+              inherit_id="stock.report_delivery_document">
+
+        <xpath expr="//t[@t-set='address']" position="before">
+            <t t-set="unico_incoterm_loc" t-value="o._unico_incoterm_delivery_location()"/>
+            <t t-set="unico_is_local_delivery" t-value="o.sudo().sale_id and o.sudo().sale_id.unico_local_delivery_required"/>
+        </xpath>
+
+        <!-- Top block: customer name only for outgoing deliveries. -->
+        <xpath expr="//div[@name='outgoing_delivery_address']" position="replace">
+            <div name="outgoing_delivery_address"
+                 t-if="o.should_print_delivery_address() or unico_is_local_delivery or unico_incoterm_loc">
+                <div t-out="o.move_ids[0].partner_id or o.partner_id"
+                    t-options='{"widget": "contact", "fields": ["name"], "no_marker": True}'/>
+            </div>
+        </xpath>
+
+        <!-- Distinct Shipping Address section (real delivery partner address) for
+             local/customer deliveries, with the incoterm location as a Location Note. -->
+        <xpath expr="//div[@name='div_incoming_address']" position="after">
+            <div class="col-7" name="div_shipping_address"
+                 t-if="o.picking_type_id.code == 'outgoing' and (unico_incoterm_loc or unico_is_local_delivery or o.should_print_delivery_address())">
+                <strong>Shipping Address</strong>
+                <div t-out="o.move_ids[0].partner_id or o.partner_id"
+                    t-options='{"widget": "contact", "fields": ["address", "name", "phone"], "no_marker": True, "phone_icons": True}'/>
+                <t t-if="unico_incoterm_loc">
+                    <strong class="d-block mt-3">Location Note</strong>
+                    <div style="white-space: pre-line;" t-out="unico_incoterm_loc"/>
+                </t>
+            </div>
+        </xpath>
+
+        <!-- Incoterm code only; the location note now prints under Shipping Address. -->
+        <xpath expr="//div[@t-if=&quot;o.sudo().sale_id.incoterm&quot;]" position="replace">
+            <div class="col col-3" t-if="o.sudo().sale_id.incoterm">
+                <strong>Incoterm</strong>
+                <div t-if="o.sudo().sale_id.incoterm" t-field="o.sudo().sale_id.incoterm.code"/>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Picking Operations report: surface the incoterm location note whenever
+         the linked sale carries one, for EVERY picking type — outgoing
+         deliveries, internal transfers (e.g. Stage Product / SFP) and receipts.
+         It prints in the header row next to Contact (with horizontal padding, as
+         the row is a gap-less flex layout), so it is not tied to the outgoing-only
+         delivery-address block. -->
+    <template id="report_picking_unico_incoterm"
+              inherit_id="stock.report_picking">
+
+        <xpath expr="//t[@t-set='address']" position="after">
+            <t t-set="unico_incoterm_loc" t-value="o._unico_incoterm_delivery_location()"/>
+            <t t-set="unico_is_local_delivery" t-value="o.sudo().sale_id and o.sudo().sale_id.unico_local_delivery_required"/>
+        </xpath>
+
+        <!-- Force the delivery address to print for outgoing local/incoterm pickings. -->
+        <xpath expr="//div[@name='div_outgoing_address']/div" position="attributes">
+            <attribute name="t-if">o.should_print_delivery_address() or (o.picking_type_id.code == 'outgoing' and (unico_is_local_delivery or unico_incoterm_loc))</attribute>
+        </xpath>
+
+        <!-- Location Note in the header row: prints for any picking type. -->
+        <xpath expr="//div[@name='div_contact']" position="after">
+            <div t-if="unico_incoterm_loc" name="div_incoterm_location" class="px-3">
+                <strong>Location Note</strong>
+                <div style="white-space: pre-line;" t-out="unico_incoterm_loc"/>
+            </div>
+        </xpath>
+    </template>
+</odoo>

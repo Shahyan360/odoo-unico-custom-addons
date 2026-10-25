@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_unico_financial_dashboard" model="ir.actions.client">
+        <field name="name">Financial KPI Dashboard</field>
+        <field name="tag">unico_financial_dashboard.dashboard</field>
+    </record>
+
+    <menuitem
+        id="menu_unico_financial_dashboard"
+        name="Financial KPI Dashboard"
+        parent="account.menu_finance_reports"
+        action="action_unico_financial_dashboard"
+        sequence="2"
+        groups="account.group_account_readonly,account.group_account_invoice"/>
+</odoo>

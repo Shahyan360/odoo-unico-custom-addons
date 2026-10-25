@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Portal sale order: hide the Disc.% column and the red, struck-through
+         original unit price so the customer only sees the net price. Scoped to
+         the web portal (report_type == 'html') — the printed quotation PDF keeps
+         showing the discount and original price. -->
+    <template id="unico_portal_sale_hide_discount"
+              inherit_id="sale.sale_order_portal_content"
+              name="Unico: Hide Discount in Portal Sale Order">
+
+        <!-- Drop the whole Disc.% column: its header and every cell are guarded
+             by display_discount, so forcing it False in the portal removes them. -->
+        <xpath expr="//t[@t-set='display_discount']" position="replace">
+            <t t-set="display_discount"
+               t-value="report_type != 'html' and any(line.discount > 0 for line in lines_to_report)"/>
+        </xpath>
+
+        <!-- Suppress the red line-through original price_unit in the portal when a
+             discount applies; the net price (line below it) is shown on its own. -->
+        <xpath expr="//td[@name='td_product_priceunit']//div[@t-field='line.price_unit']" position="attributes">
+            <attribute name="t-if">line.discount &gt;= 0 and (report_type != 'html' or not line.discount)</attribute>
+        </xpath>
+
+    </template>
+
+    <!-- Portal sidebar: hide the "Your advantage" box that shows the undiscounted
+         total struck through above the discounted price. -->
+    <template id="unico_portal_sale_hide_advantage"
+              inherit_id="sale.sale_order_portal_template"
+              name="Unico: Hide 'Your advantage' in Portal Sale Order">
+
+        <xpath expr="//div[@name='sale_order_advantage']" position="replace"/>
+
+    </template>
+
+</odoo>

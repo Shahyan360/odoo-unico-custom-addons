@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- One switch for every automatic customer email, in Sales settings.
+         Odoo scatters these across three places (an Inventory setting for the
+         delivery mail, a Sales setting for the automatic invoice, and nothing
+         at all for the order-confirmation and payment-received mails), so a
+         single authoritative toggle is what makes "no automatic mail to
+         customers" checkable. -->
+    <record id="res_config_settings_view_form_unico_customer_emails" model="ir.ui.view">
+        <field name="name">res.config.settings.form.unico.customer.emails</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@name='quotation_order_setting_container']" position="inside">
+                <setting id="unico_send_automatic_customer_emails"
+                         string="Automatic Customer Emails"
+                         help="Let Odoo email customers on its own: order confirmation and payment receipt after an online payment, the automatic invoice, and the delivery confirmation. Turn this off to send everything by hand — the Send by Email buttons, Send &amp; Print and chatter are unaffected, and internal notifications to your own staff keep working.">
+                    <field name="unico_send_automatic_customer_emails"/>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

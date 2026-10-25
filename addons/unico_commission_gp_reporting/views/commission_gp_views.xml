@@ -1,0 +1,762 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_unico_commission_gp_period_list" model="ir.ui.view">
+        <field name="name">unico.commission.gp.period.list</field>
+        <field name="model">unico.commission.gp.period</field>
+        <field name="arch" type="xml">
+            <list string="Commissionable GP Periods"
+                  decoration-muted="state == 'cancelled'"
+                  decoration-success="state in ('approved', 'exported')">
+                <field name="name"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="salesperson_id"/>
+                <field name="source_line_count"/>
+                <field name="exception_line_count" string="Excluded / Exception Lines"/>
+                <field name="total_gross_profit_amount" sum="Total GP"/>
+                <field name="commissionable_gross_profit_amount" sum="Commissionable GP"/>
+                <field name="margin_adjusted_commissionable_gp_amount" sum="GP After Margin Protection"/>
+                <field name="adjustment_amount" sum="GP Basis Adjustments"/>
+                <field name="adjusted_commissionable_gp_amount" sum="Final Commission Basis"/>
+                <field name="calculated_commission_amount" sum="Calculated Commission"/>
+                <field name="manual_commission_adjustment_amount" sum="Manual Commission Adjustments"/>
+                <field name="team_commission_total" sum="Team Commission Total"/>
+                <field name="state"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_period_form" model="ir.ui.view">
+        <field name="name">unico.commission.gp.period.form</field>
+        <field name="model">unico.commission.gp.period</field>
+        <field name="arch" type="xml">
+            <form string="Commission Period">
+                <header>
+                    <button name="action_calculate" type="object" string="Calculate / Refresh"
+                            class="btn-primary"
+                            groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"
+                            invisible="state != 'draft'"/>
+                    <button name="action_calculate" type="object" string="Recalculate and Return to Draft"
+                            class="btn-secondary"
+                            groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"
+                            invisible="state != 'ready_for_review'"
+                            confirm="Recalculating will return this period to Draft and rebuild generated lines. Manual overrides are preserved only for matching source lines. Continue?"/>
+                    <button name="action_review_exceptions" type="object" string="Review Exceptions"
+                            invisible="state not in ('draft', 'ready_for_review')"/>
+                    <button name="action_submit_for_review" type="object" string="Submit for Review"
+                            groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approve"
+                            class="btn-primary"
+                            groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"
+                            invisible="state != 'ready_for_review'"/>
+                    <button name="action_export_payroll" type="object" string="Export Payroll Summary"
+                            class="btn-primary"
+                            groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"
+                            invisible="state != 'approved'"/>
+                    <button name="action_reopen" type="object" string="Return to Draft"
+                            groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"
+                            invisible="state != 'ready_for_review'"
+                            confirm="Return this period to Draft for corrections?"/>
+                    <button name="action_reopen" type="object" string="Admin Reopen"
+                            groups="unico_commission_gp_reporting.group_unico_commission_gp_admin"
+                            invisible="state != 'approved'"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"
+                            invisible="state in ('exported', 'cancelled')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,ready_for_review,approved,exported"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Scope">
+                            <field name="date_start" readonly="state != 'draft'"/>
+                            <field name="date_end" readonly="state != 'draft'"/>
+                            <field name="salesperson_id" readonly="state != 'draft'"/>
+                            <field name="plan_id" readonly="state != 'draft'"/>
+                            <field name="company_id" readonly="state != 'draft'" groups="base.group_multi_company"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="last_calculated_date"/>
+                        </group>
+                        <group string="Payout">
+                            <field name="team_commission_total"/>
+                            <field name="adjusted_commissionable_gp_amount"/>
+                            <field name="manual_commission_adjustment_amount"/>
+                            <field name="exception_line_count" string="Exceptions"/>
+                            <field name="pending_collection_line_count"/>
+                            <field name="pending_collection_amount"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Commission by Salesperson">
+                            <field name="summary_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="salesperson_id" readonly="1"/>
+                                    <field name="line_count" readonly="1"/>
+                                    <field name="exception_line_count" readonly="1"/>
+                                    <field name="revenue_amount" readonly="1" sum="Revenue"/>
+                                    <field name="gross_profit_amount" readonly="1" sum="GP"/>
+                                    <field name="gp_basis_adjustment_amount" readonly="1" sum="GP Basis Adjustments"/>
+                                    <field name="commission_basis_amount" readonly="1" sum="Commission Basis"/>
+                                    <field name="commission_rate" widget="percentage"/>
+                                    <field name="margin_full_payout_factor" widget="percentage"/>
+                                    <field name="margin_reduced_75_payout_factor" widget="percentage"/>
+                                    <field name="margin_reduced_50_payout_factor" widget="percentage"/>
+                                    <field name="calculated_commission_amount" readonly="1" sum="Calculated Commission"/>
+                                    <field name="manual_commission_adjustment_amount" sum="Manual Adjustments"/>
+                                    <field name="final_approved_commission_amount" readonly="1" sum="Final Approved"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Invoice Lines">
+                            <field name="line_ids" readonly="state != 'draft'">
+                                <list decoration-danger="not commissionable"
+                                      decoration-info="is_credit"
+                                      decoration-warning="margin_protection_band in ('reduced_75', 'reduced_50')">
+                                    <field name="commissionable" string="Included?"/>
+                                    <field name="effective_exclusion_reason" string="Why Excluded"/>
+                                    <field name="move_id"/>
+                                    <field name="partner_id"/>
+                                    <field name="salesperson_id"/>
+                                    <field name="invoice_payment_state"/>
+                                    <field name="collection_date"/>
+                                    <field name="revenue_amount" sum="Revenue"/>
+                                    <field name="gross_profit_amount" sum="GP"/>
+                                    <field name="margin_percent" widget="percentage"/>
+                                    <field name="margin_protection_band"/>
+                                    <field name="commission_basis_amount" sum="Commission Basis"/>
+                                    <field name="calculated_commission_amount" sum="Commission"/>
+                                    <field name="invoice_date" optional="hide"/>
+                                    <field name="is_credit" optional="hide"/>
+                                    <field name="cash_collected" optional="hide"/>
+                                    <field name="attribution_source" optional="hide"/>
+                                    <field name="attribution_warning" optional="hide"/>
+                                    <field name="product_id" optional="hide"/>
+                                    <field name="quantity" optional="hide"/>
+                                    <field name="cost_amount" optional="hide"/>
+                                    <field name="policy_margin_payout_factor" widget="percentage" optional="hide"/>
+                                    <field name="margin_payout_factor" widget="percentage" optional="hide"/>
+                                    <field name="margin_adjusted_gp_amount" optional="show"/>
+                                    <field name="commission_rate" widget="percentage" optional="show"/>
+                                    <field name="manual_commission_state" optional="hide"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="GP Basis Adjustments">
+                            <field name="adjustment_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="salesperson_id"/>
+                                    <field name="reason"/>
+                                    <field name="amount" sum="Adjustments"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="GP &amp; Margin Detail">
+                            <group string="Gross Profit Summary">
+                                <group>
+                                    <field name="total_revenue_amount"/>
+                                    <field name="total_cost_amount"/>
+                                    <field name="total_gross_profit_amount"/>
+                                </group>
+                                <group>
+                                    <field name="commissionable_revenue_amount"/>
+                                    <field name="commissionable_cost_amount"/>
+                                    <field name="commissionable_gross_profit_amount"/>
+                                    <field name="margin_adjusted_commissionable_gp_amount"/>
+                                    <field name="excluded_gross_profit_amount"/>
+                                </group>
+                            </group>
+                            <group string="Margin Protection Summary">
+                                <group>
+                                    <field name="full_payout_line_count"/>
+                                    <field name="reduced_75_payout_line_count"/>
+                                    <field name="reduced_50_payout_line_count"/>
+                                    <field name="no_payout_line_count"/>
+                                </group>
+                                <group>
+                                    <field name="full_margin_gross_profit_amount"/>
+                                    <field name="reduced_margin_gross_profit_amount"/>
+                                    <field name="no_payout_gross_profit_amount"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Policy Snapshot"
+                              groups="unico_commission_gp_reporting.group_unico_commission_gp_manager">
+                            <group>
+                                <group string="Snapshotted Policy (read-only)">
+                                    <field name="default_commission_rate" widget="percentage" readonly="1"/>
+                                    <field name="margin_full_payout_threshold" widget="percentage" readonly="1"/>
+                                    <field name="margin_reduced_75_threshold" widget="percentage" readonly="1"/>
+                                    <field name="margin_reduced_50_threshold" widget="percentage" readonly="1"/>
+                                    <field name="margin_full_payout_factor" widget="percentage" readonly="1"/>
+                                    <field name="margin_reduced_75_payout_factor" widget="percentage" readonly="1"/>
+                                    <field name="margin_reduced_50_payout_factor" widget="percentage" readonly="1"/>
+                                    <field name="require_cash_collected" readonly="1"/>
+                                    <field name="attribution_basis" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_period_search" model="ir.ui.view">
+        <field name="name">unico.commission.gp.period.search</field>
+        <field name="model">unico.commission.gp.period</field>
+        <field name="arch" type="xml">
+            <search string="Commissionable GP Periods">
+                <field name="name"/>
+                <field name="salesperson_id"/>
+                <field name="date_start"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="ready_for_review" string="Ready for Review" domain="[('state', '=', 'ready_for_review')]"/>
+                <filter name="approved" string="Approved" domain="[('state', '=', 'approved')]"/>
+                <filter name="exported" string="Exported to Payroll" domain="[('state', '=', 'exported')]"/>
+                <separator/>
+                <filter name="group_salesperson" string="Salesperson" context="{'group_by': 'salesperson_id'}"/>
+                <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_unico_commission_gp_periods" model="ir.actions.act_window">
+        <field name="name">Commission Periods</field>
+        <field name="res_model">unico.commission.gp.period</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_unico_commission_gp_period_search"/>
+    </record>
+
+    <record id="view_unico_commission_gp_line_list" model="ir.ui.view">
+        <field name="name">unico.commission.gp.line.list</field>
+        <field name="model">unico.commission.gp.line</field>
+        <field name="arch" type="xml">
+            <list string="Commissionable GP Lines"
+                  create="0"
+                  delete="0"
+                  decoration-danger="not commissionable"
+                  decoration-info="is_credit"
+                  decoration-warning="margin_protection_band in ('reduced_75', 'reduced_50')">
+                <field name="commissionable" string="Included?"/>
+                <field name="effective_exclusion_reason" string="Why Excluded"/>
+                <field name="period_id"/>
+                <field name="move_id"/>
+                <field name="partner_id"/>
+                <field name="salesperson_id"/>
+                <field name="invoice_payment_state"/>
+                <field name="collection_date"/>
+                <field name="revenue_amount" sum="Revenue"/>
+                <field name="gross_profit_amount" sum="Gross Profit"/>
+                <field name="margin_percent" widget="percentage"/>
+                <field name="margin_protection_band"/>
+                <field name="commission_basis_amount" sum="Commission Basis"/>
+                <field name="calculated_commission_amount" sum="Commission"/>
+                <field name="invoice_date" optional="hide"/>
+                <field name="is_credit" optional="hide"/>
+                <field name="cash_collected" optional="hide"/>
+                <field name="attribution_source" optional="hide"/>
+                <field name="attribution_warning" optional="hide"/>
+                <field name="account_salesperson_id" optional="hide"/>
+                <field name="product_id" optional="hide"/>
+                <field name="quantity" optional="hide"/>
+                <field name="cost_amount" optional="hide"/>
+                <field name="policy_margin_payout_factor" widget="percentage" optional="hide"/>
+                <field name="margin_payout_factor" widget="percentage" optional="hide"/>
+                <field name="margin_adjusted_gp_amount" optional="show"/>
+                <field name="commission_rate" widget="percentage" optional="show"/>
+                <field name="sale_order_id" optional="hide"/>
+                <field name="manual_commission_state" optional="hide"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_line_form" model="ir.ui.view">
+        <field name="name">unico.commission.gp.line.form</field>
+        <field name="model">unico.commission.gp.line</field>
+        <field name="arch" type="xml">
+            <form string="Commissionable GP Line" create="0" delete="0">
+                <header>
+                    <button name="action_view_invoice" type="object" string="Open Invoice"/>
+                    <button name="action_view_sale_order" type="object" string="Open Sales Order"
+                            invisible="not sale_order_id"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="period_id" readonly="1"/>
+                            <field name="invoice_date" readonly="1"/>
+                            <field name="move_id" readonly="1"/>
+                            <field name="is_credit" readonly="1"/>
+                            <field name="invoice_payment_state" readonly="1"/>
+                            <field name="collection_date" readonly="1"/>
+                            <field name="cash_collected" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="salesperson_id" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="commercial_partner_id" readonly="1"/>
+                            <field name="company_id" readonly="1" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="product_id" readonly="1"/>
+                            <field name="product_categ_id" readonly="1"/>
+                            <field name="sale_order_id" readonly="1"/>
+                            <field name="sale_order_ids" widget="many2many_tags" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="quantity" readonly="1"/>
+                            <field name="revenue_amount" readonly="1"/>
+                            <field name="cost_amount" readonly="1"/>
+                            <field name="gross_profit_amount" readonly="1"/>
+                            <field name="margin_percent" widget="percentage" readonly="1"/>
+                            <field name="margin_protection_band" readonly="1"/>
+                            <field name="policy_margin_payout_factor" widget="percentage" readonly="1"/>
+                            <field name="margin_payout_factor" widget="percentage" readonly="1"/>
+                            <field name="margin_adjusted_gp_amount" readonly="1"/>
+                            <field name="commission_basis_amount" readonly="1"/>
+                            <field name="commission_rate" widget="percentage"/>
+                            <field name="calculated_commission_amount" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Commissionable GP Classification">
+                        <group>
+                            <field name="auto_commissionable" readonly="1"/>
+                            <field name="auto_exclusion_reason" readonly="1"/>
+                            <field name="commissionable" readonly="1"/>
+                            <field name="effective_exclusion_reason" readonly="1"/>
+                        </group>
+                        <group groups="unico_commission_gp_reporting.group_unico_commission_gp_manager">
+                            <field name="manual_commission_state"/>
+                            <field name="manual_exclusion_reason"
+                                   invisible="manual_commission_state == 'auto'"
+                                   required="manual_commission_state != 'auto'"/>
+                            <field name="manual_salesperson_id"
+                                   invisible="manual_commission_state != 'reassign'"
+                                   required="manual_commission_state == 'reassign'"/>
+                            <field name="manager_note" required="manual_commission_state != 'auto'"/>
+                            <field name="override_user_id" readonly="1"/>
+                            <field name="override_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Audit Details"
+                           groups="unico_commission_gp_reporting.group_unico_commission_gp_manager">
+                        <group>
+                            <field name="account_salesperson_id" readonly="1"/>
+                            <field name="attribution_partner_id" readonly="1"/>
+                            <field name="attribution_source" readonly="1"/>
+                            <field name="attribution_warning" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="attribution_snapshot_date" readonly="1"/>
+                            <field name="attribution_snapshot_user_id" readonly="1"/>
+                            <field name="account_move_line_id" readonly="1"/>
+                            <field name="sale_order_line_id" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_line_pivot" model="ir.ui.view">
+        <field name="name">unico.commission.gp.line.pivot</field>
+        <field name="model">unico.commission.gp.line</field>
+        <field name="arch" type="xml">
+            <pivot string="Commissionable GP Analysis">
+                <field name="salesperson_id" type="row"/>
+                <field name="commercial_partner_id" type="row"/>
+                <field name="product_categ_id" type="col"/>
+                <field name="margin_protection_band" type="col"/>
+                <field name="revenue_amount" type="measure"/>
+                <field name="cost_amount" type="measure"/>
+                <field name="gross_profit_amount" type="measure"/>
+                <field name="margin_adjusted_gp_amount" type="measure"/>
+                <field name="commission_basis_amount" type="measure"/>
+                <field name="calculated_commission_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_line_search" model="ir.ui.view">
+        <field name="name">unico.commission.gp.line.search</field>
+        <field name="model">unico.commission.gp.line</field>
+        <field name="arch" type="xml">
+            <search string="Commissionable GP Lines">
+                <field name="move_id"/>
+                <field name="salesperson_id"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <field name="sale_order_id"/>
+                <field name="invoice_date"/>
+                <field name="collection_date"/>
+                <filter name="commissionable" string="Commissionable" domain="[('commissionable', '=', True)]"/>
+                <filter name="excluded" string="Excluded / Exceptions" domain="[('commissionable', '=', False)]"/>
+                <filter name="cash_collected" string="Cash Collected" domain="[('cash_collected', '=', True)]"/>
+                <filter name="pending_collection" string="Pending Collection" domain="[('effective_exclusion_reason', '=', 'pending_collection')]"/>
+                <filter name="credits" string="Credits / Returns" domain="[('is_credit', '=', True)]"/>
+                <filter name="full_payout" string="Full Band" domain="[('margin_protection_band', '=', 'full_payout')]"/>
+                <filter name="reduced_payout" string="Reduced / Low Margin Bands" domain="[('margin_protection_band', 'in', ('reduced_75', 'reduced_50'))]"/>
+                <filter name="no_payout" string="No Payout" domain="[('margin_protection_band', '=', 'no_payout')]"/>
+                <filter name="attribution_warnings" string="Attribution Warnings" domain="[('attribution_warning', '!=', 'none')]"/>
+                <separator/>
+                <filter name="group_period" string="Period" context="{'group_by': 'period_id'}"/>
+                <filter name="group_salesperson" string="Salesperson" context="{'group_by': 'salesperson_id'}"/>
+                <filter name="group_customer" string="Customer" context="{'group_by': 'commercial_partner_id'}"/>
+                <filter name="group_product" string="Product" context="{'group_by': 'product_id'}"/>
+                <filter name="group_payment_status" string="Payment Status" context="{'group_by': 'invoice_payment_state'}"/>
+                <filter name="group_exclusion" string="Why Excluded" context="{'group_by': 'effective_exclusion_reason'}"/>
+                <filter name="group_margin_band" string="Payout Band" context="{'group_by': 'margin_protection_band'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_unico_commission_gp_lines" model="ir.actions.act_window">
+        <field name="name">GP Transaction Lines</field>
+        <field name="res_model">unico.commission.gp.line</field>
+        <field name="view_mode">list,pivot,form</field>
+        <field name="search_view_id" ref="view_unico_commission_gp_line_search"/>
+    </record>
+
+    <record id="view_unico_commission_gp_exception_list" model="ir.ui.view">
+        <field name="name">unico.commission.gp.line.exceptions</field>
+        <field name="model">unico.commission.gp.line</field>
+        <field name="arch" type="xml">
+            <list string="Commission Exceptions" editable="bottom"
+                  decoration-danger="not commissionable">
+                <field name="currency_id" column_invisible="True"/>
+                <field name="effective_exclusion_reason" string="Why Excluded" readonly="1"/>
+                <field name="move_id" readonly="1"/>
+                <field name="partner_id" readonly="1"/>
+                <field name="salesperson_id" readonly="1"/>
+                <field name="invoice_payment_state" readonly="1"/>
+                <field name="collection_date" readonly="1"/>
+                <field name="gross_profit_amount" readonly="1" sum="GP"/>
+                <field name="manual_commission_state"/>
+                <field name="manual_exclusion_reason"/>
+                <field name="manual_salesperson_id"/>
+                <field name="manager_note"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_unico_commission_exceptions" model="ir.actions.act_window">
+        <field name="name">Commission Exceptions</field>
+        <field name="res_model">unico.commission.gp.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_unico_commission_gp_exception_list"/>
+        <field name="domain">[('commissionable', '=', False)]</field>
+    </record>
+
+    <record id="view_unico_commission_gp_my_line_list" model="ir.ui.view">
+        <field name="name">unico.commission.gp.line.my.list</field>
+        <field name="model">unico.commission.gp.line</field>
+        <field name="arch" type="xml">
+            <list string="Commission Details" create="0" edit="0" delete="0"
+                  decoration-danger="not commissionable" decoration-info="is_credit">
+                <field name="currency_id" column_invisible="True"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="move_id" string="Invoice"/>
+                <field name="product_id" string="Product"/>
+                <field name="commissionable" string="Included?"/>
+                <field name="effective_exclusion_reason" string="Why Excluded"/>
+                <field name="collection_date"/>
+                <field name="margin_payout_factor" string="GP Eligible" widget="percentage"/>
+                <field name="commission_basis_amount" sum="Commission Basis"/>
+                <field name="calculated_commission_amount" sum="Commission Amount"/>
+                <field name="is_credit" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_unico_my_commission_lines" model="ir.actions.act_window">
+        <field name="name">Commission Details</field>
+        <field name="res_model">unico.commission.gp.line</field>
+        <field name="view_mode">list</field>
+        <field name="domain">[('salesperson_id', '=', uid)]</field>
+        <field name="view_id" ref="view_unico_commission_gp_my_line_list"/>
+        <field name="search_view_id" ref="view_unico_commission_gp_line_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No commission lines yet for you.</p>
+            <p>
+                Commission is paid on the gross profit of invoices billed to accounts you own,
+                once the invoice is cash-collected. Lines marked <b>Included?</b> count toward
+                your payout; <b>Why Excluded</b> explains anything that does not (for example
+                pending collection or low margin). Amounts are read-only and finalized by your
+                commission manager.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_my_summary_list" model="ir.ui.view">
+        <field name="name">unico.commission.gp.salesperson.summary.my.list</field>
+        <field name="model">unico.commission.gp.salesperson.summary</field>
+        <field name="arch" type="xml">
+            <list string="My Commission" create="0" edit="0" delete="0"
+                  decoration-success="state in ('approved', 'exported')">
+                <field name="currency_id" column_invisible="True"/>
+                <field name="period_id"/>
+                <field name="state"/>
+                <field name="line_count" string="Lines"/>
+                <field name="exception_line_count" string="Excluded / Exceptions"/>
+                <field name="commission_basis_amount" sum="Commission Basis"/>
+                <field name="commission_rate" widget="percentage"/>
+                <field name="calculated_commission_amount" sum="Calculated Commission"/>
+                <field name="manual_commission_adjustment_amount" sum="Manual Adjustments"/>
+                <field name="final_approved_commission_amount" sum="Final Payable"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_my_summary_form" model="ir.ui.view">
+        <field name="name">unico.commission.gp.salesperson.summary.my.form</field>
+        <field name="model">unico.commission.gp.salesperson.summary</field>
+        <field name="arch" type="xml">
+            <form string="My Commission" create="0" edit="0" delete="0">
+                <header>
+                    <button name="action_view_detail_lines" type="object" string="View Detail Lines"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="ready_for_review,approved,exported"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="period_id" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Payout">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="final_approved_commission_amount" readonly="1"/>
+                            <field name="calculated_commission_amount" readonly="1"/>
+                            <field name="manual_commission_adjustment_amount" readonly="1"/>
+                        </group>
+                        <group string="Calculation">
+                            <field name="commission_basis_amount" readonly="1"/>
+                            <field name="commission_rate" widget="percentage" readonly="1"/>
+                            <field name="line_count" readonly="1"/>
+                            <field name="exception_line_count" string="Excluded / Exceptions" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_summary_list" model="ir.ui.view">
+        <field name="name">unico.commission.gp.salesperson.summary.list</field>
+        <field name="model">unico.commission.gp.salesperson.summary</field>
+        <field name="arch" type="xml">
+            <list string="Commission Summary" create="0" edit="0" delete="0"
+                  decoration-success="state in ('approved', 'exported')">
+                <field name="currency_id" column_invisible="True"/>
+                <field name="period_id"/>
+                <field name="salesperson_id"/>
+                <field name="state"/>
+                <field name="line_count"/>
+                <field name="exception_line_count" string="Exceptions"/>
+                <field name="commission_basis_amount" sum="Commission Basis"/>
+                <field name="commission_rate" widget="percentage"/>
+                <field name="calculated_commission_amount" sum="Calculated Commission"/>
+                <field name="manual_commission_adjustment_amount" sum="Manual Adjustments"/>
+                <field name="final_approved_commission_amount" sum="Final Payable"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_summary_form" model="ir.ui.view">
+        <field name="name">unico.commission.gp.salesperson.summary.form</field>
+        <field name="model">unico.commission.gp.salesperson.summary</field>
+        <field name="arch" type="xml">
+            <form string="Commission Summary" create="0" edit="0" delete="0">
+                <header>
+                    <button name="action_view_detail_lines" type="object" string="View Detail Lines"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,ready_for_review,approved,exported"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="salesperson_id" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Period">
+                            <field name="period_id" readonly="1"/>
+                            <field name="company_id" readonly="1" groups="base.group_multi_company"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="line_count" readonly="1"/>
+                            <field name="exception_line_count" string="Exceptions" readonly="1"/>
+                        </group>
+                        <group string="Payout">
+                            <field name="final_approved_commission_amount" readonly="1"/>
+                            <field name="calculated_commission_amount" readonly="1"/>
+                            <field name="manual_commission_adjustment_amount" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Calculation">
+                        <group>
+                            <field name="commission_basis_amount" readonly="1"/>
+                            <field name="commission_rate" widget="percentage" readonly="1"/>
+                            <field name="gp_basis_adjustment_amount" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="revenue_amount" readonly="1"/>
+                            <field name="gross_profit_amount" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Margin Band GP Eligibility"
+                           groups="unico_commission_gp_reporting.group_unico_commission_gp_manager">
+                        <field name="margin_full_payout_factor" widget="percentage" readonly="1"/>
+                        <field name="margin_reduced_75_payout_factor" widget="percentage" readonly="1"/>
+                        <field name="margin_reduced_50_payout_factor" widget="percentage" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_unico_commission_gp_summaries" model="ir.actions.act_window">
+        <field name="name">Commission by Salesperson</field>
+        <field name="res_model">unico.commission.gp.salesperson.summary</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_unico_commission_gp_summary_list"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No salesperson commission summaries yet.</p>
+            <p>
+                Create or refresh a Commission Period to generate salesperson commission summaries.
+                Summary rows are managed from the period, not created manually.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_unico_my_commission_summaries" model="ir.actions.act_window">
+        <field name="name">My Commission</field>
+        <field name="res_model">unico.commission.gp.salesperson.summary</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('view_unico_commission_gp_my_summary_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('view_unico_commission_gp_my_summary_form')})]"/>
+        <field name="domain">[('salesperson_id', '=', uid)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No commission summaries yet.</p>
+            <p>
+                Your commission appears here after a manager submits the commission period for review.
+                Open a summary and use <b>View Detail Lines</b> to see the invoices behind the payout.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_adjustment_list" model="ir.ui.view">
+        <field name="name">unico.commission.gp.adjustment.list</field>
+        <field name="model">unico.commission.gp.adjustment</field>
+        <field name="arch" type="xml">
+            <list string="GP Basis Adjustments">
+                <field name="date"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="period_id"/>
+                <field name="salesperson_id"/>
+                <field name="reason"/>
+                <field name="amount" sum="Amount"/>
+                <field name="note"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_unico_commission_gp_adjustment_form" model="ir.ui.view">
+        <field name="name">unico.commission.gp.adjustment.form</field>
+        <field name="model">unico.commission.gp.adjustment</field>
+        <field name="arch" type="xml">
+            <form string="GP Basis Adjustment">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="period_id"/>
+                            <field name="date"/>
+                            <field name="salesperson_id"/>
+                        </group>
+                        <group>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="reason"/>
+                            <field name="amount"/>
+                        </group>
+                    </group>
+                    <field name="note"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_unico_commission_gp_adjustments" model="ir.actions.act_window">
+        <field name="name">GP Basis Adjustments</field>
+        <field name="res_model">unico.commission.gp.adjustment</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_unico_commission_gp_root"
+              name="Commission GP"
+              sequence="90"
+              groups="unico_commission_gp_reporting.group_unico_commission_gp_user"/>
+    <menuitem id="menu_unico_commission_my"
+              name="My Commission"
+              parent="menu_unico_commission_gp_root"
+              action="action_unico_my_commission_summaries"
+              sequence="5"
+              groups="unico_commission_gp_reporting.group_unico_commission_gp_user"/>
+    <menuitem id="menu_unico_commission_gp_reporting"
+              name="Reporting"
+              parent="menu_unico_commission_gp_root"
+              sequence="10"
+              groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"/>
+    <menuitem id="menu_unico_commission_gp_periods"
+              name="Commission Periods"
+              parent="menu_unico_commission_gp_reporting"
+              action="action_unico_commission_gp_periods"
+              sequence="10"
+              groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"/>
+    <menuitem id="menu_unico_commission_gp_lines"
+              name="GP Transaction Lines"
+              parent="menu_unico_commission_gp_reporting"
+              action="action_unico_commission_gp_lines"
+              sequence="20"
+              groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"/>
+    <menuitem id="menu_unico_commission_exceptions"
+              name="Exception Workbench"
+              parent="menu_unico_commission_gp_reporting"
+              action="action_unico_commission_exceptions"
+              sequence="22"
+              groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"/>
+    <menuitem id="menu_unico_commission_gp_summaries"
+              name="Commission by Salesperson"
+              parent="menu_unico_commission_gp_reporting"
+              action="action_unico_commission_gp_summaries"
+              sequence="25"
+              groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"/>
+    <menuitem id="menu_unico_commission_gp_adjustments"
+              name="GP Basis Adjustments"
+              parent="menu_unico_commission_gp_reporting"
+              action="action_unico_commission_gp_adjustments"
+              sequence="30"
+              groups="unico_commission_gp_reporting.group_unico_commission_gp_manager"/>
+
+    <record id="menu_unico_commission_gp_lines" model="ir.ui.menu">
+        <field name="active" eval="False"/>
+    </record>
+    <record id="menu_unico_commission_gp_adjustments" model="ir.ui.menu">
+        <field name="active" eval="False"/>
+    </record>
+</odoo>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="stripe_terminal_reader_view_list" model="ir.ui.view">
+        <field name="name">stripe.terminal.reader.list</field>
+        <field name="model">stripe.terminal.reader</field>
+        <field name="arch" type="xml">
+            <list string="Terminal Readers">
+                <field name="label"/>
+                <field name="device_type"/>
+                <field name="location_id"/>
+                <field name="status" decoration-success="status == 'online'"
+                       decoration-muted="status == 'offline'" widget="badge"/>
+                <field name="is_simulated"/>
+                <field name="serial_number"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <button name="action_sync_status" type="object" string="Sync"
+                        icon="fa-refresh"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="stripe_terminal_reader_view_form" model="ir.ui.view">
+        <field name="name">stripe.terminal.reader.form</field>
+        <field name="model">stripe.terminal.reader</field>
+        <field name="arch" type="xml">
+            <form string="Terminal Reader">
+                <header>
+                    <button name="action_sync_status" type="object"
+                            string="Sync Status" class="btn-secondary"/>
+                    <button name="action_cancel_action" type="object"
+                            string="Cancel Reader Action" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Simulated"
+                            invisible="not is_simulated"/>
+                    <group>
+                        <group>
+                            <field name="label"/>
+                            <field name="device_type" readonly="1"/>
+                            <field name="serial_number" readonly="1"/>
+                            <field name="is_simulated" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="status" widget="badge"
+                                   decoration-success="status == 'online'"/>
+                            <field name="location_id"/>
+                            <field name="stripe_reader_id" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="stripe_terminal_reader_action" model="ir.actions.act_window">
+        <field name="name">Terminal Readers</field>
+        <field name="res_model">stripe.terminal.reader</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No Stripe Terminal readers yet</p>
+            <p>Open your <b>Stripe</b> payment provider (Configuration &gt; Payment
+               Providers), Stripe Terminal tab, and click <b>Sync Readers</b> -
+               or <b>Create Simulated Reader</b> to test without hardware.</p>
+        </field>
+    </record>
+
+</odoo>

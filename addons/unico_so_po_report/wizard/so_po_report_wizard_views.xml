@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_unico_so_po_report_wizard_form" model="ir.ui.view">
+        <field name="name">unico.so.po.report.wizard.form</field>
+        <field name="model">unico.so.po.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Sales vs Purchases Report">
+                <group>
+                    <group string="Period">
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                    </group>
+                    <group string="Filters">
+                        <field name="state_filter"/>
+                        <field name="purchase_scope"/>
+                        <field name="include_rfq"/>
+                        <field name="company_id" groups="base.group_multi_company"
+                               options="{'no_create': True}"/>
+                    </group>
+                </group>
+                <!-- Totals before the download, so a wrong date range is caught
+                     here rather than in the spreadsheet. -->
+                <group string="What you will get">
+                    <field name="currency_id" invisible="1"/>
+                    <group>
+                        <field name="order_count"/>
+                        <field name="purchase_count"/>
+                    </group>
+                    <group>
+                        <field name="so_amount_total"/>
+                        <field name="po_amount_total"/>
+                        <field name="revenue_total"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_export_xlsx" string="Export to Excel"
+                            type="object" class="btn-primary"
+                            invisible="order_count == 0"/>
+                    <button name="action_view_orders" string="View Orders"
+                            type="object" class="btn-secondary"
+                            invisible="order_count == 0"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_unico_so_po_report_wizard" model="ir.actions.act_window">
+        <field name="name">Sales vs Purchases</field>
+        <field name="res_model">unico.so.po.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_unico_so_po_report_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_unico_so_po_report"
+              name="Sales vs Purchases"
+              parent="sale.menu_sale_report"
+              action="action_unico_so_po_report_wizard"
+              sequence="96"
+              groups="sales_team.group_sale_manager,purchase.group_purchase_user"/>
+
+</odoo>

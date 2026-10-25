@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Quotation / Sale Order: customer name on top, distinct Invoicing + Shipping
+         address sections. Incoterm location remains a separate location note. -->
+    <template id="report_saleorder_document_unico_incoterm"
+              inherit_id="sale.report_saleorder_document">
+
+        <xpath expr="//t[@t-set='address']" position="before">
+            <t t-set="unico_incoterm_loc" t-value="doc._unico_incoterm_delivery_location()"/>
+        </xpath>
+
+        <!-- Top block: customer name only. -->
+        <xpath expr="//t[@t-set='address']/div[@t-field='doc.partner_id']" position="attributes">
+            <attribute name="t-options">{"widget": "contact", "fields": ["name"], "no_marker": True}</attribute>
+        </xpath>
+
+        <!-- Always show distinct Invoicing and Shipping address sections (the real
+             partner addresses). The incoterm location prints as a separate Location
+             Note under the Shipping Address (when filled). -->
+        <xpath expr="//t[./t[@t-set='information_block']]" position="replace">
+            <t t-set="information_block">
+                <strong>Invoicing Address</strong>
+                <div t-field="doc.partner_invoice_id"
+                    t-options='{"widget": "contact", "fields": ["address", "name", "phone"], "no_marker": True, "phone_icons": True}'/>
+                <strong class="d-block mt-3">Shipping Address</strong>
+                <div t-field="doc.partner_shipping_id"
+                    t-options='{"widget": "contact", "fields": ["address", "name", "phone"], "no_marker": True, "phone_icons": True}'/>
+                <t t-if="unico_incoterm_loc">
+                    <strong class="d-block mt-3">Location Note</strong>
+                    <div style="white-space: pre-line;" t-out="unico_incoterm_loc"/>
+                </t>
+            </t>
+        </xpath>
+
+        <!-- Incoterm code only; the location note now prints under Shipping Address. -->
+        <xpath expr="//div[@t-if='doc.incoterm']" position="replace">
+            <div class="col" t-if="doc.incoterm">
+                <strong>Incoterm</strong>
+                <div t-if="doc.incoterm" t-field="doc.incoterm.code"/>
+            </div>
+        </xpath>
+    </template>
+</odoo>

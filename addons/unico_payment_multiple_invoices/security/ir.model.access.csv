@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_multi_invoice_payment_link_billing,unico.multi.invoice.payment.link.billing,model_unico_multi_invoice_payment_link,account.group_account_invoice,1,1,1,1
+access_multi_invoice_payment_link_manager,unico.multi.invoice.payment.link.manager,model_unico_multi_invoice_payment_link,account.group_account_manager,1,1,1,1
+access_unico_line_total_wizard,unico.line.total.wizard,model_unico_line_total_wizard,sales_team.group_sale_salesman,1,1,1,1

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Invoice: customer name on top, distinct Invoicing + Shipping address
+         sections. Incoterm location remains a separate location note. -->
+    <template id="report_invoice_document_unico_incoterm"
+              inherit_id="account.report_invoice_document">
+
+        <xpath expr="//t[@t-set='forced_vat']" position="after">
+            <t t-set="unico_incoterm_loc" t-value="o._unico_incoterm_delivery_location()"/>
+        </xpath>
+
+        <!-- Replace the whole address area with name-on-top + distinct sections. -->
+        <xpath expr="//div[hasclass('row')][.//t[@t-set='information_block']]" position="replace">
+            <div class="row">
+                <t t-set="address">
+                    <address class="mb-0" t-field="o.partner_id"
+                        t-options='{"widget": "contact", "fields": ["name"], "no_marker": True}'/>
+                </t>
+                <t t-set="information_block">
+                    <strong>Invoicing Address</strong>
+                    <div t-field="o.partner_id"
+                        t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}'/>
+                    <div t-if="o.partner_id.vat">
+                        <t t-if="o.company_id.account_fiscal_country_id.vat_label"
+                           t-out="o.company_id.account_fiscal_country_id.vat_label"/>
+                        <t t-else="">Tax ID</t>: <span t-field="o.partner_id.vat"/>
+                    </div>
+                    <t t-if="unico_incoterm_loc">
+                        <strong class="d-block mt-3">Shipping Address</strong>
+                        <div style="white-space: pre-line;" t-out="unico_incoterm_loc"/>
+                    </t>
+                </t>
+            </div>
+        </xpath>
+
+        <!-- Incoterm code only; the location note now prints under Shipping Address. -->
+        <xpath expr="//div[@name='incoterm_id']" position="replace">
+            <div class="col" t-if="o.invoice_incoterm_id" name="incoterm_id">
+                <strong>Incoterm</strong>
+                <div t-if="o.invoice_incoterm_id" t-field="o.invoice_incoterm_id.code" class="m-0"/>
+            </div>
+        </xpath>
+    </template>
+</odoo>

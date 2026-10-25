@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="inherit_view_order_form" model="ir.ui.view">
+        <field name="name">sale.order.form</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_view_delivery']" position="after">
+                <button name="action_view_rma_orders"
+                    type="object"
+                    string="RMA"
+                    class="oe_highlight"
+                    invisible="rma_count == 0"
+                    icon="fa-undo">
+                    <field name="rma_count" widget="statinfo" />
+                </button>
+
+            </xpath>
+            <xpath expr="//field[@name='commitment_date']" position="after">
+                <field name="origin"
+                        string="Source Document"
+                        readonly="1"
+                        invisible="origin == False"/>
+            </xpath>
+            <xpath expr="//sheet" position="before">
+                <div class="alert alert-success" role="alert"
+                    invisible="rma_credit_available_amount &lt;= 0">
+                    <field name="rma_credit_available_amount" widget="monetary"
+                        class="oe_inline"/>
+                    of customer credit is available to apply to a new invoice
+                    (released by a return-with-credit RMA).
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_orders" model="ir.actions.act_window">
+        <field name="name">Orders</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,kanban,form,calendar,pivot,graph</field>
+        <field name="domain">[('rma_id', '!=', False)]</field>
+    </record>
+
+    <menuitem name="Orders"
+        id="menu_orders"
+        parent="menu_rma_order"
+        action="action_orders"
+        sequence="4" />
+</odoo>

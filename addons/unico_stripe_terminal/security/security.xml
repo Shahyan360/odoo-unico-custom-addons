@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<odoo>
+
+    <data noupdate="0">
+        <record id="stripe_terminal_security_category" model="ir.module.category">
+            <field name="name">Stripe Terminal</field>
+            <field name="sequence">95</field>
+        </record>
+
+        <record id="res_groups_privilege_stripe_terminal" model="res.groups.privilege">
+            <field name="name">Stripe Terminal</field>
+            <field name="category_id" ref="stripe_terminal_security_category"/>
+            <field name="sequence">1</field>
+        </record>
+
+        <record id="group_stripe_terminal_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="privilege_id" ref="res_groups_privilege_stripe_terminal"/>
+        </record>
+
+        <record id="group_stripe_terminal_manager" model="res.groups">
+            <field name="name">Administrator</field>
+            <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+            <field name="implied_ids" eval="[(4, ref('group_stripe_terminal_user'))]"/>
+            <field name="privilege_id" ref="res_groups_privilege_stripe_terminal"/>
+        </record>
+    </data>
+
+    <!-- Anyone who can sell can take a terminal payment. -->
+    <record model="res.groups" id="sales_team.group_sale_salesman">
+        <field name="implied_ids" eval="[(4, ref('group_stripe_terminal_user'))]"/>
+    </record>
+
+    <!-- Multi-company record rules -->
+    <record id="stripe_terminal_payment_company_rule" model="ir.rule">
+        <field name="name">Stripe Terminal Payment: multi-company</field>
+        <field name="model_id" ref="model_stripe_terminal_payment"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="stripe_terminal_refund_company_rule" model="ir.rule">
+        <field name="name">Stripe Terminal Refund: multi-company</field>
+        <field name="model_id" ref="model_stripe_terminal_refund"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="stripe_terminal_reader_company_rule" model="ir.rule">
+        <field name="name">Stripe Terminal Reader: multi-company</field>
+        <field name="model_id" ref="model_stripe_terminal_reader"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="stripe_terminal_location_company_rule" model="ir.rule">
+        <field name="name">Stripe Terminal Location: multi-company</field>
+        <field name="model_id" ref="model_stripe_terminal_location"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+</odoo>

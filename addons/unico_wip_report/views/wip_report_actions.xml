@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The board. Kanban first: stage management is the primary interaction. -->
+    <record id="action_unico_wip_board" model="ir.actions.act_window">
+        <field name="name">WIP Board</field>
+        <field name="res_model">unico.wip.item</field>
+        <field name="view_mode">kanban,list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_unico_wip_item_search"/>
+        <field name="context">{'search_default_wip_open_stage': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No customer orders are in progress</p>
+            <p>Confirmed sales orders appear here from the moment the customer
+               confirms until the goods are fully delivered — through purchasing,
+               supplier shipping, goods receipt and final delivery. The stage is
+               detected automatically; drag a card to pin it somewhere else.</p>
+        </field>
+    </record>
+
+    <!-- Bind the views explicitly so the action never picks up a stray default. -->
+    <record id="action_unico_wip_board_kanban" model="ir.actions.act_window.view">
+        <field name="sequence">10</field>
+        <field name="view_mode">kanban</field>
+        <field name="view_id" ref="view_unico_wip_item_kanban"/>
+        <field name="act_window_id" ref="action_unico_wip_board"/>
+    </record>
+    <record id="action_unico_wip_board_list" model="ir.actions.act_window.view">
+        <field name="sequence">20</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_unico_wip_item_list"/>
+        <field name="act_window_id" ref="action_unico_wip_board"/>
+    </record>
+    <record id="action_unico_wip_board_pivot" model="ir.actions.act_window.view">
+        <field name="sequence">30</field>
+        <field name="view_mode">pivot</field>
+        <field name="view_id" ref="view_unico_wip_item_pivot"/>
+        <field name="act_window_id" ref="action_unico_wip_board"/>
+    </record>
+    <record id="action_unico_wip_board_graph" model="ir.actions.act_window.view">
+        <field name="sequence">40</field>
+        <field name="view_mode">graph</field>
+        <field name="view_id" ref="view_unico_wip_item_graph"/>
+        <field name="act_window_id" ref="action_unico_wip_board"/>
+    </record>
+    <record id="action_unico_wip_board_form" model="ir.actions.act_window.view">
+        <field name="sequence">50</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_unico_wip_item_form"/>
+        <field name="act_window_id" ref="action_unico_wip_board"/>
+    </record>
+
+    <!-- Owl dashboard (tiles + watchlist + drill-down). -->
+    <record id="action_unico_wip_dashboard" model="ir.actions.client">
+        <field name="name">WIP Dashboard</field>
+        <field name="tag">unico_wip_report.dashboard</field>
+    </record>
+
+    <!-- Menus under Sales > Reporting, plus stage config under Configuration. -->
+    <menuitem id="menu_unico_wip_root"
+              name="Work in Progress"
+              parent="sale.menu_sale_report"
+              sequence="95"
+              groups="unico_wip_report.group_unico_wip_user"/>
+    <menuitem id="menu_unico_wip_dashboard"
+              name="Dashboard"
+              parent="menu_unico_wip_root"
+              action="action_unico_wip_dashboard"
+              sequence="10"/>
+    <!-- <menuitem id="menu_unico_wip_board"
+              name="WIP Board"
+              parent="menu_unico_wip_root"
+              action="action_unico_wip_board"
+              sequence="20"/> -->
+    <menuitem id="menu_unico_wip_stages"
+              name="WIP Stages"
+              parent="sale.menu_sale_config"
+              action="action_unico_wip_stages"
+              sequence="90"
+              groups="unico_wip_report.group_unico_wip_manager"/>
+
+</odoo>

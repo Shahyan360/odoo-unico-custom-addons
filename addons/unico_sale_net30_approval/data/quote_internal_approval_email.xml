@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Code-versioned copy of the "Quotation Approval Internal" mail template
+        that previously lived only in the database (Studio-authored, no external
+        id). Sent by sale.order.action_request_internal_approval to the approvers
+        of the Studio quote-approval rule. Kept updatable (noupdate omitted) so an
+        upgrade always redeploys this canonical version.
+    -->
+    <record id="quote_internal_approval_email" model="mail.template">
+        <field name="name">Quotation Approval Internal</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="subject">Internal Approval Required – Quotation {{ object.name }}</field>
+        <field name="email_from">{{ (object.company_id.email or user.email) }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+            <div data-oe-version="2.0">
+                <p style="margin:0px 0 16px 0;">
+                    Dear Team,
+                </p>
+                <p style="margin:0px 0 16px 0;">
+                    A new quotation requires review and approval before being sent to the customer.
+                </p>
+                <table border="1" cellpadding="8" cellspacing="0"
+                       style="border-collapse:collapse;width:100%;font-size:13px;border:1px solid #808080;"
+                       width="100%">
+                    <tbody>
+                        <tr style="background-color:#f2f2f2;">
+                            <td style="padding:8px;width:35%;">
+                                <strong>Reference</strong>
+                            </td>
+                            <td style="padding:8px;">
+                                <t t-out="object.name"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;">
+                                <strong>Customer</strong>
+                            </td>
+                            <td style="padding:8px;">
+                                <t t-out="object.partner_id.name"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;">
+                                <strong>Quotation Amount</strong>
+                            </td>
+                            <td style="padding:8px;">
+                                <t t-out="format_amount(object.amount_total, object.currency_id)"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;">
+                                <strong>Current Margin %</strong>
+                            </td>
+                            <td style="padding:8px;">
+                                <t t-out="'%.2f' % ((object.margin / object.amount_untaxed) * 100 if object.amount_untaxed else 0)"/>%
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;">
+                                <strong>Discount %</strong>
+                            </td>
+                            <td style="padding:8px;">
+                                <t t-out="'%.2f' % (sum(line.discount for line in object.order_line) / len(object.order_line) if object.order_line else 0)"/>%
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br/>
+                <p style="margin:0px 0 16px 0;">
+                    <a t-att-href="'/web#id=%s&amp;model=sale.order&amp;view_type=form' % object.id"
+                       style="color:#ffffff;background-color:#875a7b;padding:10px 15px;text-decoration:none;border-radius:5px;display:inline-block;">
+                        Review &amp; Approve Quotation
+                    </a>
+                </p>
+                <p style="margin:0px 0 16px 0;">
+                    Best regards,<br/>
+                    <t t-out="object.company_id.name"/>
+                </p>
+            </div>
+        </field>
+    </record>
+</odoo>

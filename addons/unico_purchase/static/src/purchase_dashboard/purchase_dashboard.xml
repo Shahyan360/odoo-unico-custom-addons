@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!--
+        Extend the standard Purchase dashboard banner (shown on the RFQ list, i.e.
+        as soon as the Purchase app is opened) with a sales-urgency strip. Each
+        tile clears the search and toggles the matching invisible search filter,
+        reusing the native `setSearchContext` handler and `purchaseData` payload
+        (extended server-side in purchase.order.retrieve_dashboard).
+    -->
+    <t t-name="unico_purchase.PurchaseDashboardUrgency"
+       t-inherit="purchase.PurchaseDashboard" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('o_purchase_dashboard')]/div[1]" position="before">
+            <div class="o_unico_urgency_strip d-flex flex-wrap gap-2 mb-3">
+                <div class="o_unico_urgency_label d-flex align-items-center fw-bold text-muted pe-2">
+                    Sales Urgency
+                </div>
+                <a href="#" class="o_unico_urgency_tile o_unico_urgency_overdue btn border flex-fill text-center"
+                   title="Open purchases needed for a sale whose commitment date has passed"
+                   filter_name="filter_urgency_overdue"
+                   t-on-click.prevent="setSearchContext">
+                    <span class="o_unico_urgency_value fs-2 fw-bold text-danger"
+                          t-esc="(purchaseData.urgency and purchaseData.urgency.overdue) or 0"/>
+                    <div class="o_unico_urgency_caption">Overdue</div>
+                </a>
+                <a href="#" class="o_unico_urgency_tile o_unico_urgency_urgent btn border flex-fill text-center"
+                   title="Open purchases needed for a sale due within 3 days"
+                   filter_name="filter_urgency_urgent"
+                   t-on-click.prevent="setSearchContext">
+                    <span class="o_unico_urgency_value fs-2 fw-bold text-warning"
+                          t-esc="(purchaseData.urgency and purchaseData.urgency.urgent) or 0"/>
+                    <div class="o_unico_urgency_caption">Urgent (≤3 days)</div>
+                </a>
+                <a href="#" class="o_unico_urgency_tile o_unico_urgency_normal btn border flex-fill text-center"
+                   title="Open purchases linked to a later sale"
+                   filter_name="filter_urgency_normal"
+                   t-on-click.prevent="setSearchContext">
+                    <span class="o_unico_urgency_value fs-2 fw-bold text-success"
+                          t-esc="(purchaseData.urgency and purchaseData.urgency.normal) or 0"/>
+                    <div class="o_unico_urgency_caption">Scheduled</div>
+                </a>
+            </div>
+        </xpath>
+    </t>
+
+</templates>

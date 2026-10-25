@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!--
+        Append a dedicated, virtual RMA card to the Inventory Overview dashboard.
+        It is inserted right before the kanban "ghost" spacer cards, in the same
+        flex grid as the native operation-type cards, so it reads as a real card.
+        No stock.picking.type record is involved.
+    -->
+    <t t-name="unico_delivery.RmaStockKanbanRenderer"
+       t-inherit="web.KanbanRenderer" t-inherit-mode="primary">
+        <xpath expr="//div[hasclass('o_kanban_ghost')]" position="before">
+            <div t-if="!props.list.isGrouped"
+                 class="o_kanban_record o_unico_rma_card">
+                <div name="rma_card" class="px-2">
+                    <a class="fw-bold fs-4" t-on-click="() => this.openRma()">RMA</a>
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <button class="btn btn-primary" t-on-click="() => this.openRma('ready')">
+                                <span t-if="rmaCard.ready > 0">
+                                    <t t-esc="rmaCard.ready"/> To Process
+                                </span>
+                                <span t-else="">Open</span>
+                            </button>
+                        </div>
+                        <div class="col-6 stock-overview-links">
+                            <div t-if="rmaCard.waiting > 0" class="row">
+                                <a class="col-8 offset-4 pe-0 text-truncate"
+                                   t-on-click="() => this.openRma('waiting')">
+                                    <div class="row">
+                                        <span class="col-6">Waiting</span>
+                                        <span class="col-2 text-end" t-esc="rmaCard.waiting"/>
+                                    </div>
+                                </a>
+                            </div>
+                            <div t-if="rmaCard.late > 0" class="row">
+                                <a class="col-8 offset-4 pe-0 text-truncate"
+                                   t-on-click="() => this.openRma('late')">
+                                    <div class="row">
+                                        <span class="col-6">Late</span>
+                                        <span class="col-2 text-end" t-esc="rmaCard.late"/>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </t>
+
+</templates>

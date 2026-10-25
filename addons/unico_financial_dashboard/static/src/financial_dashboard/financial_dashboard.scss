@@ -1,0 +1,1243 @@
+.o_unico_financial_dashboard {
+    background: #f8f9fa;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.o_unico_financial_content {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden !important;
+    padding: 16px 20px 28px;
+}
+
+.o_unico_report_filter_state {
+    align-self: center;
+    background: #fffbeb;
+    border: 1px solid #fedf89;
+    border-radius: 999px;
+    color: #b54708;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.2;
+    padding: 5px 9px;
+}
+
+.o_unico_report_filter_state_invalid {
+    background: #fef3f2;
+    border-color: #fecdca;
+    color: #b42318;
+}
+
+.o_unico_financial_header {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.o_unico_financial_header h1 {
+    font-size: 22px;
+    font-weight: 650;
+    line-height: 1.2;
+    margin: 0 0 4px;
+}
+
+.o_unico_financial_header p,
+.o_unico_financial_generated {
+    color: #667085;
+    font-size: 13px;
+    margin: 0;
+}
+
+.o_unico_financial_layout {
+    align-items: start;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 178px minmax(0, 1fr);
+    min-width: 0;
+}
+
+.o_unico_financial_main {
+    min-width: 0;
+}
+
+.o_unico_financial_sidebar {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    display: grid;
+    gap: 4px;
+    max-height: calc(100vh - 150px);
+    overflow: auto;
+    padding: 10px;
+    position: sticky;
+    top: 12px;
+}
+
+.o_unico_financial_sidebar > span {
+    color: #667085;
+    font-size: 11px;
+    font-weight: 650;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.o_unico_sidebar_link {
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    color: #344054;
+    font-size: 13px;
+    line-height: 1.25;
+    padding: 7px 8px;
+    text-align: left;
+}
+
+.o_unico_sidebar_link:hover,
+.o_unico_sidebar_link:focus {
+    background: #fbf7fa;
+    color: #875a7b;
+    outline: none;
+}
+
+.o_unico_financial_overview,
+.o_unico_financial_section,
+.o_unico_financial_grid {
+    scroll-margin-top: 14px;
+}
+
+.o_unico_period_summary {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    margin: 0 0 14px;
+    min-width: 0;
+}
+
+.o_unico_period_item {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    min-width: 0;
+    padding: 10px 12px;
+}
+
+.o_unico_period_item span {
+    color: #667085;
+    display: block;
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1.25;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.o_unico_period_item strong {
+    color: #111827;
+    display: block;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.3;
+}
+
+.o_unico_period_item small {
+    color: #667085;
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.o_unico_period_item_warning {
+    border-color: #f79009;
+    background: #fffbeb;
+}
+
+.o_unico_financial_loading {
+    color: #667085;
+    padding: 48px;
+    text-align: center;
+}
+
+.o_unico_financial_cards {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin-bottom: 14px;
+    min-width: 0;
+}
+
+.o_unico_financial_card {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    color: #111827;
+    min-height: 102px;
+    min-width: 0;
+    padding: 12px;
+    text-align: left;
+}
+
+.o_unico_financial_card:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+.o_unico_financial_card:not(:disabled):hover {
+    border-color: #875a7b;
+    box-shadow: 0 1px 4px rgba(17, 24, 39, 0.12);
+}
+
+.o_unico_financial_card_label {
+    align-items: center;
+    color: #667085;
+    display: flex;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 5px;
+    justify-content: space-between;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.o_unico_metric_help {
+    align-items: center;
+    background: #f2f4f7;
+    border: 1px solid #d0d5dd;
+    border-radius: 50%;
+    color: #475467;
+    cursor: help;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    height: 16px;
+    justify-content: center;
+    line-height: 1;
+    text-transform: none;
+    width: 16px;
+}
+
+.o_unico_metric_help:hover {
+    background: #fff;
+    border-color: #875a7b;
+    color: #875a7b;
+}
+
+.o_unico_metric_heading_row {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+}
+
+.o_unico_financial_card_context {
+    color: #667085;
+    display: block;
+    font-size: 11px;
+    line-height: 1.25;
+    margin-bottom: 1px;
+    text-transform: uppercase;
+}
+
+.o_unico_financial_card_period {
+    color: #475467;
+    display: block;
+    font-size: 11px;
+    line-height: 1.25;
+    margin-bottom: 8px;
+}
+
+.o_unico_financial_card strong {
+    display: block;
+    font-size: 24px;
+    font-weight: 650;
+    line-height: 1.2;
+}
+
+.o_unico_financial_delta {
+    display: block;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.o_unico_finance_good {
+    color: #027a48;
+}
+
+.o_unico_finance_bad {
+    color: #b42318;
+}
+
+.o_unico_finance_neutral {
+    color: #667085;
+}
+
+.o_unico_financial_grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    min-width: 0;
+}
+
+.o_unico_financial_section {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    min-width: 0;
+    overflow-x: auto;
+    padding: 14px;
+}
+
+.o_unico_financial_section_header {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.o_unico_financial_section_header h2 {
+    font-size: 15px;
+    font-weight: 650;
+    margin: 0;
+}
+
+.o_unico_financial_section_header p {
+    margin: 2px 0 0;
+}
+
+.o_unico_inventory_value_section .o_unico_financial_section_header {
+    gap: 16px;
+}
+
+.o_unico_inventory_total {
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    min-width: 220px;
+    padding: 10px 12px;
+    text-align: right;
+}
+
+.o_unico_inventory_total span {
+    color: #667085;
+    display: block;
+    font-size: 11px;
+    font-weight: 650;
+    text-transform: uppercase;
+}
+
+.o_unico_inventory_total strong {
+    color: #111827;
+    display: block;
+    font-size: 22px;
+    font-weight: 650;
+    line-height: 1.2;
+    margin-top: 3px;
+}
+
+.o_unico_inventory_history {
+    border-top: 1px solid #eaecf0;
+    margin-top: 14px;
+    padding-top: 14px;
+}
+
+.o_unico_inventory_history_empty {
+    border-top: 1px solid #eaecf0;
+    color: #667085;
+    font-size: 13px;
+    margin-top: 14px;
+    padding-top: 14px;
+}
+
+.o_unico_inventory_history_error {
+    color: #b42318;
+}
+
+.o_unico_inventory_history_header {
+    align-items: flex-start;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.o_unico_inventory_history_header h3 {
+    font-size: 14px;
+    font-weight: 650;
+    margin: 0;
+}
+
+.o_unico_inventory_history_plot {
+    height: clamp(180px, 24vh, 260px);
+    overflow: hidden;
+    padding-left: 62px;
+    position: relative;
+}
+
+.o_unico_inventory_history_line {
+    fill: none;
+    opacity: 0.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+    vector-effect: non-scaling-stroke;
+}
+
+.o_unico_inventory_history_line.is-total {
+    opacity: 1;
+    stroke-width: 2.8;
+}
+
+.o_unico_inventory_history_point {
+    opacity: 0.95;
+}
+
+.o_unico_inventory_history_legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    margin-top: 10px;
+}
+
+.o_unico_inventory_history_legend span {
+    align-items: center;
+    color: #344054;
+    display: inline-flex;
+    font-size: 12px;
+    gap: 6px;
+    min-width: 180px;
+}
+
+.o_unico_inventory_history_legend i {
+    border-radius: 50%;
+    display: inline-block;
+    flex: 0 0 auto;
+    height: 9px;
+    width: 9px;
+}
+
+.o_unico_inventory_history_legend strong {
+    font-weight: 600;
+}
+
+.o_unico_inventory_history_legend em {
+    color: #667085;
+    font-style: normal;
+    margin-left: auto;
+}
+
+.o_unico_balance_summary {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    margin-bottom: 12px;
+}
+
+.o_unico_balance_summary > div,
+.o_unico_balance_action {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    color: inherit;
+    padding: 9px 10px;
+    text-align: left;
+}
+
+.o_unico_balance_action {
+    cursor: pointer;
+}
+
+.o_unico_balance_action:hover,
+.o_unico_balance_action:focus {
+    border-color: #875a7b;
+    box-shadow: 0 1px 4px rgba(17, 24, 39, 0.12);
+    outline: none;
+}
+
+.o_unico_balance_summary span {
+    color: #667085;
+    display: block;
+    font-size: 11px;
+    font-weight: 650;
+    text-transform: uppercase;
+}
+
+.o_unico_balance_summary strong {
+    color: #111827;
+    display: block;
+    font-size: 18px;
+    font-weight: 650;
+    line-height: 1.2;
+    margin-top: 3px;
+}
+
+.o_unico_balance_summary small {
+    color: #667085;
+    display: block;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.o_unico_balance_summary_single {
+    grid-template-columns: minmax(180px, 260px);
+}
+
+.o_unico_balance_offset,
+.o_unico_offset_reason,
+.o_unico_ar_status {
+    background: #fffbeb;
+}
+
+.o_unico_offset_reason,
+.o_unico_ar_status {
+    border: 1px solid #fedf89;
+    border-radius: 999px;
+    color: #93370d;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1.3;
+    padding: 2px 7px;
+}
+
+.o_unico_offset_amount {
+    color: #93370d;
+    font-weight: 650;
+}
+
+.o_unico_financial_table {
+    margin-bottom: 0;
+    min-width: max-content;
+}
+
+.o_unico_financial_table th {
+    color: #344054;
+    font-size: 12px;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.o_unico_sortable_th {
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+.o_unico_table_header_content {
+    align-items: center;
+    display: flex;
+    gap: 5px;
+    justify-content: flex-start;
+    min-width: max-content;
+}
+
+.o_unico_table_header_content.text-end {
+    justify-content: flex-end;
+}
+
+.o_unico_table_header_content .o_unico_table_sort_button {
+    width: auto;
+}
+
+.o_unico_table_sort_button {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    display: flex;
+    font: inherit;
+    font-weight: 650;
+    gap: 5px;
+    padding: 0;
+    width: 100%;
+}
+
+.o_unico_table_sort_button.text-end {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.o_unico_table_sort_button:hover {
+    color: #875a7b;
+}
+
+.o_unico_sort_indicator {
+    display: inline-block;
+    flex: 0 0 auto;
+    height: 10px;
+    position: relative;
+    width: 8px;
+}
+
+.o_unico_sort_indicator::before {
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    content: "";
+    left: 0;
+    opacity: 0.35;
+    position: absolute;
+    top: 3px;
+}
+
+.o_unico_sort_indicator.is-none::before {
+    border-top: 5px solid #667085;
+}
+
+.o_unico_sort_indicator.is-asc::before {
+    border-bottom: 5px solid #875a7b;
+    opacity: 1;
+    top: 1px;
+}
+
+.o_unico_sort_indicator.is-desc::before {
+    border-top: 5px solid #875a7b;
+    opacity: 1;
+    top: 4px;
+}
+
+.o_unico_column_picker {
+    position: relative;
+}
+
+.o_unico_column_picker_menu {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.14);
+    display: grid;
+    gap: 4px;
+    min-width: 240px;
+    padding: 8px;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 5;
+}
+
+.o_unico_column_picker_option {
+    align-items: center;
+    color: #344054;
+    display: flex;
+    font-size: 13px;
+    gap: 8px;
+    line-height: 1.25;
+    margin: 0;
+    padding: 4px 6px;
+    white-space: nowrap;
+}
+
+.o_unico_column_picker_option input {
+    margin: 0;
+}
+
+.o_unico_column_picker_reset {
+    justify-self: start;
+    padding-left: 6px;
+}
+
+.o_unico_financial_table td {
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.o_unico_payment_terms_table {
+    min-width: 760px;
+}
+
+.o_unico_payment_terms_table tfoot th {
+    border-top: 2px solid #d0d5dd;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.o_unico_conversion_table {
+    min-width: 820px;
+}
+
+.o_unico_conversion_table tfoot th {
+    border-top: 2px solid #d0d5dd;
+    font-size: 12px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.o_unico_conversion_header {
+    align-items: end;
+    display: grid;
+    gap: 1px;
+    justify-items: end;
+}
+
+.o_unico_conversion_header small {
+    color: #667085;
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.o_unico_conversion_metric {
+    align-items: end;
+    display: grid;
+    gap: 2px;
+    justify-items: end;
+    line-height: 1.2;
+}
+
+.o_unico_table_value_button.o_unico_conversion_amount {
+    color: #475467;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.o_unico_conversion_rate {
+    align-items: end;
+    display: grid;
+    gap: 2px;
+    justify-items: end;
+    line-height: 1.25;
+    min-width: 112px;
+}
+
+.o_unico_conversion_rate_value {
+    font-weight: 650;
+}
+
+.o_unico_conversion_rate small {
+    color: #667085;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.o_unico_table_value_button {
+    background: transparent;
+    border: 0;
+    color: #017e84;
+    font: inherit;
+    padding: 0;
+    text-align: inherit;
+    white-space: nowrap;
+}
+
+.o_unico_table_value_button:not(:disabled) {
+    cursor: pointer;
+}
+
+.o_unico_table_value_button:not(:disabled):hover,
+.o_unico_table_value_button:not(:disabled):focus {
+    text-decoration: underline;
+}
+
+.o_unico_table_value_button:disabled {
+    color: inherit;
+    opacity: 1;
+}
+
+.o_unico_payment_terms_note {
+    color: #667085;
+    font-size: 11px;
+    line-height: 1.35;
+    margin: 8px 0 0;
+}
+
+.o_unico_conversion_notes {
+    color: #667085;
+    display: grid;
+    font-size: 11px;
+    gap: 3px;
+    line-height: 1.35;
+    margin: 8px 0 0;
+}
+
+.o_unico_conversion_notes p {
+    margin: 0;
+}
+
+.o_unico_empty_state {
+    color: #667085;
+    font-size: 13px;
+    padding: 18px 4px;
+    text-align: center;
+}
+
+.o_unico_customer_tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 300px;
+    min-width: 180px;
+}
+
+.o_unico_customer_tags .o_tag {
+    --Tag-font-size: 11px;
+    --Tag-max-width: 180px;
+    flex: 0 1 auto;
+}
+
+.o_unico_table_pagination {
+    align-items: center;
+    border-top: 1px solid #eaecf0;
+    color: #667085;
+    display: flex;
+    font-size: 12px;
+    gap: 10px;
+    justify-content: space-between;
+    margin-top: 8px;
+    min-width: max-content;
+    padding-top: 8px;
+}
+
+.o_unico_table_pagination > div {
+    display: flex;
+    gap: 6px;
+}
+
+.o_unico_table_pagination .btn:disabled {
+    cursor: default;
+    opacity: 0.55;
+}
+
+.o_unico_finance_bar {
+    background: #eaecf0;
+    border-radius: 999px;
+    display: block;
+    height: 4px;
+    margin-left: auto;
+    margin-top: 5px;
+    max-width: 120px;
+    overflow: hidden;
+}
+
+.o_unico_finance_bar i {
+    background: #875a7b;
+    display: block;
+    height: 100%;
+}
+
+.o_unico_trend_legend {
+    align-items: center;
+    color: #667085;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+    gap: 12px;
+}
+
+.o_unico_trend_legend span,
+.o_unico_trend_focus_legend span {
+    align-items: center;
+    display: inline-flex;
+    gap: 5px;
+}
+
+.o_unico_legend_actual,
+.o_unico_legend_trend {
+    background: #2563eb;
+    display: inline-block;
+    height: 2px;
+    width: 18px;
+}
+
+.o_unico_legend_trend {
+    background: repeating-linear-gradient(
+        to right,
+        #667085,
+        #667085 5px,
+        transparent 5px,
+        transparent 8px
+    );
+}
+
+.o_unico_trend_range {
+    color: #667085;
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+    text-transform: none;
+}
+
+.o_unico_trend_section {
+    overflow: hidden;
+}
+
+.o_unico_trend_controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 12px;
+    min-width: 0;
+}
+
+.o_unico_trend_chip {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    color: #344054;
+    display: inline-flex;
+    gap: 8px;
+    min-height: 36px;
+    padding: 7px 10px;
+}
+
+.o_unico_trend_chip:hover,
+.o_unico_trend_chip.is-active {
+    border-color: #875a7b;
+    box-shadow: 0 1px 4px rgba(17, 24, 39, 0.12);
+}
+
+.o_unico_trend_chip.is-active {
+    background: #fbf7fa;
+    color: #111827;
+}
+
+.o_unico_trend_chip span {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 650;
+    text-transform: uppercase;
+}
+
+.o_unico_trend_chip strong {
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.o_unico_trend_focus {
+    --unico-trend-color: #2563eb;
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 14px;
+}
+
+.o_unico_trend_focus_header {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.o_unico_trend_focus_header span {
+    color: #667085;
+    display: block;
+    font-size: 12px;
+    font-weight: 650;
+    text-transform: uppercase;
+}
+
+.o_unico_trend_focus_meta span {
+    color: #667085;
+    display: block;
+    font-size: 11px;
+    font-weight: 650;
+    text-align: right;
+    text-transform: uppercase;
+}
+
+.o_unico_trend_focus_header h3,
+.o_unico_trend_focus_header strong {
+    color: #101828;
+    font-size: 22px;
+    font-weight: 650;
+    line-height: 1.2;
+    margin: 2px 0 0;
+}
+
+.o_unico_trend_focus_title .o_unico_trend_range {
+    margin-top: 3px;
+}
+
+.o_unico_trend_focus_meta small {
+    display: block;
+    font-size: 12px;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.o_unico_trend_focus_plot {
+    height: clamp(180px, 24vh, 280px);
+    overflow: hidden;
+    padding-left: 62px;
+    position: relative;
+}
+
+.o_unico_trend_y_labels {
+    bottom: 18px;
+    color: #667085;
+    display: flex;
+    flex-direction: column;
+    font-size: 11px;
+    justify-content: space-between;
+    left: 0;
+    line-height: 1.2;
+    max-width: 58px;
+    overflow: hidden;
+    position: absolute;
+    text-align: right;
+    top: 12px;
+    white-space: nowrap;
+}
+
+.o_unico_trend_focus_svg {
+    display: block;
+    height: 100%;
+    overflow: hidden;
+    width: 100%;
+}
+
+.o_unico_trend_tooltip {
+    background: #101828;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(17, 24, 39, 0.22);
+    color: #fff;
+    min-width: 132px;
+    padding: 7px 9px;
+    pointer-events: none;
+    position: absolute;
+    transform: translate(-50%, calc(-100% - 8px));
+    z-index: 2;
+}
+
+.o_unico_trend_tooltip strong,
+.o_unico_trend_tooltip span {
+    display: block;
+    font-size: 12px;
+    line-height: 1.25;
+}
+
+.o_unico_trend_tooltip span {
+    font-size: 14px;
+    font-weight: 650;
+    margin-top: 3px;
+}
+
+.o_unico_trend_axis {
+    stroke: #eaecf0;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+.o_unico_trend_grid {
+    stroke: #f2f4f7;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+.o_unico_trend_line {
+    fill: none;
+    stroke: var(--unico-trend-color);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+}
+
+.o_unico_trend_regression {
+    fill: none;
+    opacity: 0.85;
+    stroke: #344054;
+    stroke-dasharray: 5 5;
+    stroke-linecap: round;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+}
+
+.o_unico_trend_point {
+    fill: #fff;
+    stroke: var(--unico-trend-color);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+}
+
+.o_unico_trend_hit_point {
+    cursor: pointer;
+    fill: transparent;
+    stroke: transparent;
+}
+
+.o_unico_trend_point_group {
+    cursor: pointer;
+}
+
+.o_unico_trend_point_group:hover .o_unico_trend_point {
+    fill: var(--unico-trend-color);
+}
+
+.o_unico_trend_week_labels {
+    color: #667085;
+    display: flex;
+    font-size: 11px;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: -2px;
+}
+
+.o_unico_trend_week_labels span:last-child {
+    text-align: right;
+}
+
+.o_unico_trend_focus_legend {
+    align-items: center;
+    color: #667085;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+    gap: 14px;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.o_unico_trend_revenue {
+    --unico-trend-color: #2563eb;
+}
+
+.o_unico_trend_confirmed {
+    --unico-trend-color: #9333ea;
+}
+
+.o_unico_trend_profit {
+    --unico-trend-color: #0f766e;
+}
+
+.o_unico_trend_margin {
+    --unico-trend-color: #7c3aed;
+}
+
+.o_unico_trend_credits,
+.o_unico_trend_exceptions {
+    --unico-trend-color: #dc2626;
+}
+
+.o_unico_trend_ar,
+.o_unico_trend_returns {
+    --unico-trend-color: #d97706;
+}
+
+.o_unico_trend_cash {
+    --unico-trend-color: #16a34a;
+}
+
+.o_unico_trend_preinvoice {
+    --unico-trend-color: #0891b2;
+}
+
+.o_unico_trend_cogs {
+    --unico-trend-color: #78350f;
+}
+
+.o_unico_financial_bucket_grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+}
+
+.o_unico_financial_bucket {
+    background: #fff;
+    border: 1px solid #eaecf0;
+    border-radius: 6px;
+    color: inherit;
+    padding: 10px;
+    text-align: left;
+    width: 100%;
+}
+
+.o_unico_bucket_action:not(:disabled) {
+    cursor: pointer;
+}
+
+.o_unico_bucket_action:not(:disabled):hover {
+    border-color: #875a7b;
+    box-shadow: 0 1px 4px rgba(17, 24, 39, 0.12);
+}
+
+.o_unico_bucket_action:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+.o_unico_financial_bucket span,
+.o_unico_financial_bucket small {
+    color: #667085;
+    display: block;
+    font-size: 12px;
+}
+
+.o_unico_financial_bucket strong {
+    display: block;
+    font-size: 17px;
+    margin: 4px 0;
+}
+
+.o_unico_clickable {
+    cursor: pointer;
+}
+
+.o_unico_clickable:hover {
+    background: #f9fafb;
+}
+
+@media (max-width: 992px) {
+    .o_unico_financial_layout {
+        grid-template-columns: 1fr;
+    }
+
+    .o_unico_financial_sidebar {
+        display: flex;
+        max-height: none;
+        overflow-x: auto;
+        position: static;
+        white-space: nowrap;
+    }
+
+    .o_unico_financial_sidebar > span {
+        align-self: center;
+        margin: 0 6px 0 0;
+    }
+
+    .o_unico_sidebar_link {
+        flex: 0 0 auto;
+    }
+
+    .o_unico_financial_grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .o_unico_financial_content {
+        padding: 12px;
+    }
+
+    .o_unico_financial_header {
+        display: block;
+    }
+
+    .o_unico_financial_generated {
+        margin-top: 8px;
+    }
+
+    .o_unico_financial_grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.o_unico_partial_badge {
+    background: #fef0c7;
+    border-radius: 10px;
+    color: #b54708;
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 6px;
+    padding: 1px 8px;
+    text-transform: uppercase;
+    vertical-align: middle;
+}

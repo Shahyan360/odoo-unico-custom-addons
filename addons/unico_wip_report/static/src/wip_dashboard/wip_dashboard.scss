@@ -1,0 +1,294 @@
+// Visual language kept aligned with unico_materials_report / unico_financial_dashboard:
+// same hardcoded palette (#f8f9fa page, #fff cards, #d0d5dd border, #667085 muted
+// text, #875a7b brand hover), 6px radius and flat .o_unico_* class structure.
+.o_unico_wip_dashboard {
+    background: #f8f9fa;
+}
+
+.o_unico_wip_content {
+    padding: 16px 20px 28px;
+}
+
+.o_unico_wip_header {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.o_unico_wip_header h1 {
+    font-size: 22px;
+    font-weight: 650;
+    line-height: 1.2;
+    margin: 0 0 4px;
+}
+
+.o_unico_wip_header p,
+.o_unico_wip_generated {
+    color: #667085;
+    font-size: 13px;
+    margin: 0;
+}
+
+.o_unico_wip_generated {
+    white-space: nowrap;
+}
+
+// The window the numbers below cover, spelled out next to the count so a
+// filtered total is never mistaken for the whole board.
+.o_unico_wip_scope {
+    color: #667085;
+    font-style: italic;
+    margin-left: 4px;
+}
+
+.o_unico_wip_filterbar {
+    align-items: flex-end;
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+}
+
+.o_unico_wip_filter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    min-width: 150px;
+}
+
+.o_unico_wip_filter > span {
+    color: #667085;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.o_unico_wip_loading,
+.o_unico_wip_empty {
+    color: #667085;
+    padding: 32px;
+    text-align: center;
+}
+
+.o_unico_wip_empty {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.o_unico_wip_section {
+    margin-bottom: 18px;
+}
+
+.o_unico_wip_section h2 {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+}
+
+.o_unico_wip_section_head {
+    align-items: baseline;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+// ---------------------------------------------------------------------------
+// Headline totals
+// ---------------------------------------------------------------------------
+.o_unico_wip_totals {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    display: grid;
+    gap: 1px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    overflow: hidden;
+}
+
+.o_unico_wip_total {
+    background: #fff;
+    box-shadow: 0 0 0 1px #eaecf0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+}
+
+.o_unico_wip_total_label {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.o_unico_wip_total_value {
+    color: #111827;
+    font-size: 20px;
+    font-weight: 650;
+    line-height: 1.2;
+}
+
+// ---------------------------------------------------------------------------
+// Tiles
+// ---------------------------------------------------------------------------
+.o_unico_wip_tiles {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.o_unico_wip_tile {
+    align-items: flex-start;
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-left-width: 4px;
+    border-radius: 6px;
+    color: #111827;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 96px;
+    padding: 12px 14px;
+    text-align: left;
+}
+
+.o_unico_wip_tile:not(:disabled):hover {
+    border-color: #875a7b;
+    box-shadow: 0 1px 4px rgba(17, 24, 39, 0.12);
+}
+
+.o_unico_wip_tile_value {
+    font-size: 24px;
+    font-weight: 650;
+    line-height: 1.2;
+}
+
+.o_unico_wip_tile_label {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.o_unico_wip_tile_sub {
+    color: #98a2b3;
+    font-size: 12px;
+}
+
+.o_unico_wip_tile_danger {
+    border-left-color: #b42318;
+}
+
+.o_unico_wip_tile_warning {
+    border-left-color: #b54708;
+}
+
+.o_unico_wip_tile_info {
+    border-left-color: #175cd3;
+}
+
+.o_unico_wip_tile_success {
+    border-left-color: #027a48;
+}
+
+.o_unico_wip_tile_accent {
+    border-left-color: #875a7b;
+}
+
+.o_unico_wip_tile_neutral {
+    border-left-color: #98a2b3;
+}
+
+// ---------------------------------------------------------------------------
+// Watchlist table
+// ---------------------------------------------------------------------------
+.o_unico_wip_table_wrap {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+.o_unico_wip_table {
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 100%;
+    white-space: nowrap;
+}
+
+.o_unico_wip_table th {
+    background: #f9fafb;
+    border-bottom: 1px solid #d0d5dd;
+    color: #667085;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 8px 12px;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.o_unico_wip_table td {
+    border-bottom: 1px solid #eaecf0;
+    color: #111827;
+    padding: 9px 12px;
+    vertical-align: top;
+}
+
+.o_unico_wip_table tr:last-child td {
+    border-bottom: 0;
+}
+
+.o_unico_wip_row {
+    cursor: pointer;
+}
+
+.o_unico_wip_row:hover td {
+    background: #f9fafb;
+}
+
+.o_unico_wip_num {
+    text-align: right;
+}
+
+.o_unico_wip_muted {
+    color: #98a2b3;
+}
+
+// The note is free text and can run long — let it wrap and cap its width so it
+// never pushes the rest of the row off-screen.
+.o_unico_wip_note {
+    max-width: 320px;
+    white-space: normal;
+}
+
+.o_unico_wip_badge {
+    border-radius: 10px;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+}
+
+.o_unico_wip_badge_danger {
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.o_unico_wip_badge_warning {
+    background: #fffaeb;
+    color: #b54708;
+}

@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_printer_tray_user,printer.tray.user,model_printer_tray,iot.group_iot_user,1,0,0,0
+access_printer_tray_admin,printer.tray.admin,model_printer_tray,iot.group_iot_admin,1,1,1,1

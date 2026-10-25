@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_unico_delivery" model="ir.ui.view">
+        <field name="name">sale.order.form.unico.delivery</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <button name="action_view_invoice" position="before">
+                <button name="action_sync_unico_delivery_task"
+                        type="object"
+                        string="Create Delivery Task"
+                        class="btn-secondary"
+                        invisible="state not in ['sale', 'done'] or unico_delivery_task_count != 0"/>
+                <button name="action_sync_unico_delivery_task"
+                        type="object"
+                        string="Sync Delivery Task"
+                        class="btn-secondary"
+                        invisible="state not in ['sale', 'done'] or unico_delivery_task_count == 0"/>
+                <button name="action_view_unico_delivery_task"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-truck"
+                        invisible="unico_delivery_task_count == 0">
+                    <field name="unico_delivery_task_count" widget="statinfo" string="Field Service"/>
+                </button>
+            </button>
+
+            <xpath expr="//group[@name='sale_shipping']//field[@name='warehouse_id']" position="after">
+                <field name="unico_local_delivery_required" readonly="state == 'cancel'"/>
+                <field name="unico_delivery_instructions"
+                       placeholder="Driver gate codes, job-site contact, unloading notes, or delivery constraints."
+                       readonly="state not in ['draft', 'sent', 'sale']"/>
+                <field name="unico_delivery_task_id" readonly="1" invisible="not unico_delivery_task_id"/>
+            </xpath>
+
+            <!-- Incoterm location is an optional local-delivery note; the shipping
+                 partner is the structured delivery address. -->
+            <xpath expr="//group[@name='sale_shipping']//field[@name='incoterm_location']" position="attributes">
+                <attribute name="placeholder">Optional incoterm, job-site, or routing note.</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

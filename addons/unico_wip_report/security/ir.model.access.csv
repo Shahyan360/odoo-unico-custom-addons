@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_unico_wip_stage_user,unico.wip.stage user,model_unico_wip_stage,group_unico_wip_user,1,0,0,0
+access_unico_wip_stage_manager,unico.wip.stage manager,model_unico_wip_stage,group_unico_wip_manager,1,1,1,1
+access_unico_wip_item_user,unico.wip.item user,model_unico_wip_item,group_unico_wip_user,1,1,0,0
+access_unico_wip_item_manager,unico.wip.item manager,model_unico_wip_item,group_unico_wip_manager,1,1,1,1
+access_unico_wip_stage_sale_user,unico.wip.stage salesperson,model_unico_wip_stage,sales_team.group_sale_salesman,1,0,0,0
+access_unico_wip_item_sale_user,unico.wip.item salesperson,model_unico_wip_item,sales_team.group_sale_salesman,1,1,0,0
+access_unico_wip_sale_order_read,sale.order read for WIP board,sale.model_sale_order,group_unico_wip_user,1,0,0,0
+access_unico_wip_purchase_order_read,purchase.order read for WIP board,purchase.model_purchase_order,group_unico_wip_user,1,0,0,0

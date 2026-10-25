@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_picking_fulfillment_type" inherit_id="stock.report_picking">
+        <xpath expr="//div[hasclass('o_stock_report_header_row')]/div[@name='div_warehouse']" position="before">
+            <div t-if="o.fulfillment_type" name="div_fulfillment_type">
+                <strong>Fulfillment Type:</strong>
+                <p t-field="o.fulfillment_type">Delivery</p>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="report_delivery_document_fulfillment_type" inherit_id="stock.report_delivery_document">
+        <xpath expr="//div[@id='informations']/div[@name='div_sched_date']" position="before">
+            <div t-if="o.fulfillment_type" class="col col-3 mw-100 mb-2" name="div_fulfillment_type">
+                <strong>Fulfillment Type</strong>
+                <div t-field="o.fulfillment_type" class="m-0">Delivery</div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="report_mrporder_fulfillment_type" inherit_id="mrp.report_mrporder">
+        <xpath expr="//div[hasclass('page')]/div[hasclass('row')][2]" position="inside">
+            <div class="col-3" t-if="o.fulfillment_type">
+                <strong>Fulfillment Type:</strong><br/>
+                <span t-field="o.fulfillment_type">Delivery</span>
+            </div>
+        </xpath>
+    </template>
+</odoo>

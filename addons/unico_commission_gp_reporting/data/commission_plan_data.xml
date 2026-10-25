@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="commission_plan_standard_gp" model="commission.plan">
+            <field name="name">Standard GP Commission Plan</field>
+            <field name="margin_full_payout_threshold">0.28</field>
+            <field name="margin_reduced_75_threshold">0.25</field>
+            <field name="margin_reduced_50_threshold">0.20</field>
+            <field name="margin_full_payout_factor">1.0</field>
+            <field name="margin_reduced_75_payout_factor">0.75</field>
+            <field name="margin_reduced_50_payout_factor">0.50</field>
+            <field name="default_commission_rate">0.0</field>
+            <field name="require_cash_collected" eval="True"/>
+            <field name="attribution_basis">account_owner</field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Keep the board honest. Three things cannot stay live on their own:
+         trackers for newly confirmed orders (and archiving finished ones),
+         purchases linked to the sale only by their `origin` (a Char, so there
+         is no dependency path), and the day-relative urgency / lateness. CPQ
+         special-order purchases stay live via @api.depends. -->
+    <record id="ir_cron_refresh_unico_wip" model="ir.cron">
+        <field name="name">Unico: Refresh Work-in-Progress Board</field>
+        <field name="model_id" ref="model_unico_wip_item"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_refresh_wip()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

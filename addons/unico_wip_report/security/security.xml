@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_unico_wip" model="ir.module.category">
+        <field name="name">Unico Work in Progress</field>
+        <field name="description">Access to the work-in-progress board for open customer orders.</field>
+        <field name="sequence">56</field>
+    </record>
+
+    <record id="unico_wip_privilege_access" model="res.groups.privilege">
+        <field name="name">WIP Board Access Level</field>
+        <field name="category_id" ref="module_category_unico_wip"/>
+    </record>
+
+    <!-- The point of the separate model: an ops coordinator can run the board —
+         read it, move cards, own and annotate blockers — without ever needing
+         write access to sale.order. -->
+    <record id="group_unico_wip_user" model="res.groups">
+        <field name="name">WIP User</field>
+        <field name="privilege_id" ref="unico_wip_privilege_access"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Can read the WIP board, move orders between stages, and record blockers and ownership.</field>
+    </record>
+
+    <record id="group_unico_wip_manager" model="res.groups">
+        <field name="name">WIP Manager</field>
+        <field name="privilege_id" ref="unico_wip_privilege_access"/>
+        <field name="implied_ids" eval="[(4, ref('group_unico_wip_user'))]"/>
+        <field name="comment">Can additionally configure the lifecycle stages and remove trackers.</field>
+    </record>
+
+    <record id="unico_wip_item_company_rule" model="ir.rule">
+        <field name="name">WIP items: company access</field>
+        <field name="model_id" ref="model_unico_wip_item"/>
+        <field name="groups" eval="[(4, ref('group_unico_wip_user'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

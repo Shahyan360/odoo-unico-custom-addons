@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Trays list lives under the native IoT menu; printers are just
+         iot.device records flagged as tray printers. -->
+    <menuitem id="menu_printer_trays" name="Printer Trays"
+              parent="iot.iot_menu_root" action="action_printer_tray" sequence="30"/>
+</odoo>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Replenishment list: surface when each reordering rule was created so the-->
+    <record id="view_warehouse_orderpoint_tree_editable_created_on" model="ir.ui.view">
+        <field name="name">stock.warehouse.orderpoint.list.editable.unico.created_on</field>
+        <field name="model">stock.warehouse.orderpoint</field>
+        <field name="inherit_id" ref="stock.view_warehouse_orderpoint_tree_editable"/>
+        <field name="arch" type="xml">
+            <field name="deadline_date" position="after">
+                <field name="create_date" string="Created On" optional="show"/>
+                <field name="unico_sale_order_status" string="Sale Order Status" widget="badge" optional="show"/>
+                <field name="unico_source_sale_order" string="Source Sale Order" optional="show"/>
+                <field name="unico_source_purchase_note" string="Source Purchase Note" optional="show"/>
+            </field>
+        </field>
+    </record>
+</odoo>

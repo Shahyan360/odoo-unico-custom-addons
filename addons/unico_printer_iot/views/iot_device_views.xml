@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Main IoT > Devices list: add the Tray Printer flag column -->
+    <record id="iot_device_view_list_tray" model="ir.ui.view">
+        <field name="name">iot.device.list.tray</field>
+        <field name="model">iot.device</field>
+        <field name="inherit_id" ref="iot.iot_device_view_list"/>
+        <field name="arch" type="xml">
+            <field name="connected_status" position="before">
+                <field name="is_tray_printer" widget="boolean_toggle" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- IoT Box form > Devices tab inline list: add the same column -->
+    <record id="iot_box_view_form_tray" model="ir.ui.view">
+        <field name="name">iot.box.form.tray</field>
+        <field name="model">iot.box</field>
+        <field name="inherit_id" ref="iot.iot_box_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='device_ids']/list/field[@name='connected_status']" position="before">
+                <field name="is_tray_printer" widget="boolean_toggle" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- IoT device form: Tray Monitoring page (only for printers) -->
+    <record id="iot_device_view_form_tray" model="ir.ui.view">
+        <field name="name">iot.device.form.tray</field>
+        <field name="model">iot.device</field>
+        <field name="inherit_id" ref="iot.iot_device_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='iot_device_details']//field[@name='type']" position="after">
+                <field name="is_tray_printer" widget="boolean_toggle" invisible="type != 'printer'"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Tray Monitoring" name="tray_monitoring" invisible="not is_tray_printer">
+                    <button name="action_test_connection" type="object" string="Test Connection"
+                            class="btn-secondary" invisible="tray_connection_mode != 'direct'"/>
+                    <button name="action_poll_now" type="object" string="Refresh Now"
+                            class="btn-secondary" invisible="tray_connection_mode != 'direct'"/>
+                    <button name="action_regenerate_token" type="object" string="Regenerate Token"
+                            class="btn-secondary" confirm="Old IoT-box configs will stop working until updated. Continue?"
+                            invisible="tray_connection_mode != 'agent'" groups="iot.group_iot_admin"/>
+                    <group>
+                        <group string="Source">
+                            <field name="tray_connection_mode"/>
+                            <field name="last_poll"/>
+                            <field name="last_status"/>
+                            <field name="last_error" invisible="last_status != 'error'"/>
+                        </group>
+                        <group string="SNMP">
+                            <field name="tray_snmp_ip" placeholder="192.168.1.115"/>
+                            <field name="snmp_port"/>
+                            <field name="snmp_version"/>
+                            <field name="snmp_community"/>
+                        </group>
+                    </group>
+                    <group string="IoT-box Agent" invisible="tray_connection_mode != 'agent'"
+                           groups="iot.group_iot_admin">
+                        <field name="push_url" readonly="1" widget="CopyClipboardChar"/>
+                        <field name="push_token" readonly="1" widget="CopyClipboardChar"/>
+                        <separator string="Paste into agent_config.json on the IoT box" colspan="2"/>
+                        <field name="agent_config_json" readonly="1" nolabel="1" colspan="2"
+                               widget="CopyClipboardText"/>
+                    </group>
+                    <separator string="Trays"/>
+                    <field name="tray_ids">
+                        <list create="0">
+                            <field name="tray_index"/>
+                            <field name="name"/>
+                            <field name="current_level"/>
+                            <field name="max_capacity"/>
+                            <field name="level_percent" widget="progressbar"/>
+                            <field name="low_threshold"/>
+                            <field name="status" widget="badge"
+                                   decoration-danger="status == 'empty'"
+                                   decoration-warning="status == 'low'"
+                                   decoration-success="status == 'ok'"/>
+                            <field name="last_update"/>
+                        </list>
+                    </field>
+                    <group string="Advanced: OIDs" invisible="tray_connection_mode != 'direct'">
+                        <field name="oid_tray_name"/>
+                        <field name="oid_current_level"/>
+                        <field name="oid_max_capacity"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

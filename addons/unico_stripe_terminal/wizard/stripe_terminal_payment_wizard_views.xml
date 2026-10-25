@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="stripe_terminal_payment_wizard_form" model="ir.ui.view">
+        <field name="name">stripe.terminal.payment.wizard.form</field>
+        <field name="model">stripe.terminal.payment.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Collect Payment">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="company_id" invisible="1"/>
+                            <field name="sale_order_id" invisible="1"/>
+                            <field name="payment_method" widget="radio"/>
+                            <field name="partner_id"/>
+                            <field name="amount"/>
+                            <field name="fee_amount" invisible="fee_amount == 0"/>
+                            <field name="total_charge" invisible="fee_amount == 0"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group invisible="payment_method != 'stripe_terminal'">
+                            <field name="location_id"/>
+                            <field name="reader_id"
+                                   required="payment_method == 'stripe_terminal'"
+                                   options="{'no_create': True, 'no_open': True}"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="status"
+                         invisible="payment_method != 'stripe_terminal'">
+                        The selected reader will prompt the customer to tap, insert or
+                        swipe their card. Keep this order open and use
+                        <b>Check Status</b> on the payment record to refresh the result.
+                    </div>
+                    <div class="alert alert-info" role="status"
+                         invisible="payment_method != 'cash'">
+                        A cash customer payment will be posted immediately and, if the
+                        order has an open invoice, reconciled against it.
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_collect" type="object" string="Collect Payment"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

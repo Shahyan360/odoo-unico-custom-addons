@@ -1,0 +1,109 @@
+// Visual language kept aligned with unico_financial_dashboard: same hardcoded
+// palette (#f8f9fa page, #fff cards, #d0d5dd border, #667085 muted text,
+// #875a7b brand hover), 6px radius and flat .o_unico_* class structure.
+.o_unico_materials_dashboard {
+    background: #f8f9fa;
+}
+
+.o_unico_materials_content {
+    padding: 16px 20px 28px;
+}
+
+.o_unico_materials_header {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.o_unico_materials_header h1 {
+    font-size: 22px;
+    font-weight: 650;
+    line-height: 1.2;
+    margin: 0 0 4px;
+}
+
+.o_unico_materials_header p,
+.o_unico_materials_generated {
+    color: #667085;
+    font-size: 13px;
+    margin: 0;
+}
+
+.o_unico_materials_generated {
+    white-space: nowrap;
+}
+
+.o_unico_materials_loading {
+    color: #667085;
+    padding: 48px;
+    text-align: center;
+}
+
+.o_unico_materials_section {
+    margin-bottom: 18px;
+}
+
+.o_unico_materials_section h2 {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+}
+
+.o_unico_materials_tiles {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.o_unico_materials_tile {
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-left-width: 4px;
+    border-radius: 6px;
+    color: #111827;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-height: 88px;
+    padding: 12px 14px;
+    text-align: left;
+}
+
+.o_unico_materials_tile:not(:disabled):hover {
+    border-color: #875a7b;
+    box-shadow: 0 1px 4px rgba(17, 24, 39, 0.12);
+}
+
+.o_unico_materials_tile_value {
+    font-size: 24px;
+    font-weight: 650;
+    line-height: 1.2;
+}
+
+.o_unico_materials_tile_label {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.o_unico_materials_tile_danger {
+    border-left-color: #b42318;
+}
+
+.o_unico_materials_tile_warning {
+    border-left-color: #b54708;
+}
+
+.o_unico_materials_tile_info {
+    border-left-color: #175cd3;
+}
+
+.o_unico_materials_tile_reason {
+    border-left-color: #875a7b;
+}

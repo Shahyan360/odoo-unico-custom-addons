@@ -1,0 +1,52 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.conf
+!*.conf.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*
+# Databases, customer exports, attachments and local artifacts
+*.dump
+*.sql
+*.sqlite*
+*.zip
+*.7z
+*.bak
+*.log
+*.xlsx
+*.xls
+*.pdf
+*.docx
+filestore/
+odoo-data/
+data-dir/
+production_import/
+output/
+backups/
+tmp*/
+# Runtime and editor state
+__pycache__/
+*.py[cod]
+*.py_backup
+*.xml_backup
+.venv/
+venv/
+node_modules/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+# Inherited hosting and deployment settings
+.github/
+.gitlab-ci.yml
+.gitmodules
+.gitconfig
+azure-pipelines.yml
+Jenkinsfile
+Dockerfile
+docker-compose*.yml

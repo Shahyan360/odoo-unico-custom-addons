@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="unico_materials_report.MaterialsDashboard">
+        <div class="o_action o_unico_materials_dashboard">
+            <ControlPanel>
+                <t t-set-slot="layout-buttons">
+                    <button type="button" class="btn btn-primary"
+                            t-on-click="refresh" t-att-disabled="state.loading">Refresh</button>
+                    <!-- <button type="button" class="btn btn-secondary"
+                            t-on-click="() => this.openOrders()">Order List</button>
+                    <button type="button" class="btn btn-secondary"
+                            t-on-click="() => this.openLines()">Line Breakdown</button> -->
+                </t>
+            </ControlPanel>
+            <div class="o-content overflow-auto o_unico_materials_content">
+                <t t-if="state.loading">
+                    <div class="o_unico_materials_loading">Loading waiting-on-materials report...</div>
+                </t>
+                <t t-else="">
+                    <div class="o_unico_materials_header">
+                        <div>
+                            <h1>Waiting on Materials</h1>
+                            <p>
+                                <strong t-esc="dashboard.total"/> confirmed order(s) cannot yet
+                                be fulfilled — waiting on stock, door components or special-order purchases.
+                            </p>
+                        </div>
+                        <div class="o_unico_materials_generated">
+                            Generated <t t-esc="dashboard.generated_at"/>
+                        </div>
+                    </div>
+
+                    <section class="o_unico_materials_section">
+                        <h2>Sales Waiting (By Urgency)</h2>
+                        <div class="o_unico_materials_tiles">
+                            <t t-foreach="dashboard.urgency || []" t-as="tile" t-key="tile.key">
+                                <button type="button"
+                                        t-attf-class="o_unico_materials_tile #{urgencyClass(tile.key)}"
+                                        t-on-click="() => this.openTile(tile)">
+                                    <span class="o_unico_materials_tile_value" t-esc="tile.count"/>
+                                    <span class="o_unico_materials_tile_label" t-esc="tile.label"/>
+                                </button>
+                            </t>
+                        </div>
+                    </section>
+
+                    <section class="o_unico_materials_section">
+                        <h2>Sales Waiting (By Blocking Reason)</h2>
+                        <div class="o_unico_materials_tiles">
+                            <t t-foreach="dashboard.reasons || []" t-as="tile" t-key="tile.key">
+                                <button type="button"
+                                        class="o_unico_materials_tile o_unico_materials_tile_reason"
+                                        t-on-click="() => this.openTile(tile)">
+                                    <span class="o_unico_materials_tile_value" t-esc="tile.count"/>
+                                    <span class="o_unico_materials_tile_label" t-esc="tile.label"/>
+                                </button>
+                            </t>
+                        </div>
+                    </section>
+
+                    <section class="o_unico_materials_section">
+                        <h2>SPF Picking waiting Purchase / Manufacturing (By Urgency)</h2>
+                        <div class="o_unico_materials_tiles">
+                            <t t-foreach="dashboard.spf_pickings || []" t-as="tile" t-key="tile.key">
+                                <button type="button"
+                                        t-attf-class="o_unico_materials_tile #{urgencyClass(tile.key)}"
+                                        t-on-click="() => this.openTile(tile)">
+                                    <span class="o_unico_materials_tile_value" t-esc="tile.count"/>
+                                    <span class="o_unico_materials_tile_label" t-esc="tile.label"/>
+                                </button>
+                            </t>
+                        </div>
+                    </section>
+
+                    <section class="o_unico_materials_section">
+                        <h2>Manufacturing Order waiting Components Purchase (By Urgency)</h2>
+                        <div class="o_unico_materials_tiles">
+                            <t t-foreach="dashboard.manufacturing_orders || []" t-as="tile" t-key="tile.key">
+                                <button type="button"
+                                        t-attf-class="o_unico_materials_tile #{urgencyClass(tile.key)}"
+                                        t-on-click="() => this.openTile(tile)">
+                                    <span class="o_unico_materials_tile_value" t-esc="tile.count"/>
+                                    <span class="o_unico_materials_tile_label" t-esc="tile.label"/>
+                                </button>
+                            </t>
+                        </div>
+                    </section>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

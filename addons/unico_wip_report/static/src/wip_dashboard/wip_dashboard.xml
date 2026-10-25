@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="unico_wip_report.WipDashboard">
+        <div class="o_action o_unico_wip_dashboard">
+            <ControlPanel>
+                <t t-set-slot="layout-buttons">
+                    <button type="button" class="btn btn-primary"
+                            t-on-click="refresh" t-att-disabled="state.loading">Refresh</button>
+                    <button type="button" class="btn btn-secondary"
+                            t-on-click="() => this.openBoard()">Open WIP Board</button>
+                </t>
+            </ControlPanel>
+            <div class="o-content overflow-auto o_unico_wip_content">
+                <t t-if="state.loading">
+                    <div class="o_unico_wip_loading">Loading work-in-progress report...</div>
+                </t>
+                <t t-else="">
+                    <div class="o_unico_wip_header">
+                        <div>
+                            <h1>Work in Progress</h1>
+                            <p>
+                                <strong t-esc="formatNumber(dashboard.total)"/> open customer
+                                order(s) between confirmation and final delivery.
+                                <span class="o_unico_wip_scope"
+                                      t-if="dashboard.filters"
+                                      t-esc="dashboard.filters.label"/>
+                            </p>
+                        </div>
+                        <div class="o_unico_wip_generated">
+                            Generated <t t-esc="dashboard.generated_at"/>
+                        </div>
+                    </div>
+
+                    <!-- Period filter. Applies to every tile and total below,
+                         and travels inside each tile's drill-down domain. -->
+                    <div class="o_unico_wip_filterbar">
+                        <label class="o_unico_wip_filter">
+                            <span>Period</span>
+                            <select class="form-select form-select-sm"
+                                    t-on-change="onPeriodChange">
+                                <t t-foreach="dashboard.period_options || []"
+                                   t-as="opt" t-key="opt.key">
+                                    <option t-att-value="opt.key"
+                                            t-att-selected="opt.key === state.filters.period"
+                                            t-esc="opt.label"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label class="o_unico_wip_filter">
+                            <span>Measured on</span>
+                            <select class="form-select form-select-sm"
+                                    t-on-change="onDateFieldChange">
+                                <t t-foreach="dashboard.date_field_options || []"
+                                   t-as="opt" t-key="opt.key">
+                                    <option t-att-value="opt.key"
+                                            t-att-selected="opt.key === state.filters.date_field"
+                                            t-esc="opt.label"/>
+                                </t>
+                            </select>
+                        </label>
+                        <t t-if="isCustomPeriod">
+                            <label class="o_unico_wip_filter">
+                                <span>From</span>
+                                <input type="date" class="form-control form-control-sm"
+                                       t-att-value="state.filters.date_from"
+                                       t-on-change="(ev) => this.onCustomDateChange('date_from', ev)"/>
+                            </label>
+                            <label class="o_unico_wip_filter">
+                                <span>To</span>
+                                <input type="date" class="form-control form-control-sm"
+                                       t-att-value="state.filters.date_to"
+                                       t-on-change="(ev) => this.onCustomDateChange('date_to', ev)"/>
+                            </label>
+                        </t>
+                    </div>
+
+                    <!-- Headline financials of the whole board. -->
+                    <section class="o_unico_wip_section">
+                        <div class="o_unico_wip_totals">
+                            <div class="o_unico_wip_total">
+                                <span class="o_unico_wip_total_label">Sales Value</span>
+                                <span class="o_unico_wip_total_value"
+                                      t-esc="formatMoney(dashboard.total_value)"/>
+                            </div>
+                            <div class="o_unico_wip_total">
+                                <span class="o_unico_wip_total_label">Estimated Cost</span>
+                                <span class="o_unico_wip_total_value"
+                                      t-esc="formatMoney(dashboard.total_cost)"/>
+                            </div>
+                            <div class="o_unico_wip_total">
+                                <span class="o_unico_wip_total_label">Expected Margin</span>
+                                <span class="o_unico_wip_total_value"
+                                      t-esc="formatMoney(dashboard.total_margin)"/>
+                            </div>
+                            <div class="o_unico_wip_total">
+                                <span class="o_unico_wip_total_label">Margin %</span>
+                                <span class="o_unico_wip_total_value"
+                                      t-esc="formatPercent(dashboard.margin_percent)"/>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- The lifecycle ladder. -->
+                    <section class="o_unico_wip_section">
+                        <h2>Lifecycle Stage</h2>
+                        <div class="o_unico_wip_tiles">
+                            <t t-foreach="dashboard.stages || []" t-as="tile" t-key="tile.key">
+                                <button type="button"
+                                        t-attf-class="o_unico_wip_tile #{stageClass(tile)}"
+                                        t-on-click="() => this.openTile(tile)">
+                                    <span class="o_unico_wip_tile_value" t-esc="formatNumber(tile.count)"/>
+                                    <span class="o_unico_wip_tile_label" t-esc="tile.label"/>
+                                    <span class="o_unico_wip_tile_sub" t-esc="formatMoney(tile.value)"/>
+                                </button>
+                            </t>
+                        </div>
+                    </section>
+
+                    <section class="o_unico_wip_section">
+                        <h2>Delivery Urgency</h2>
+                        <div class="o_unico_wip_tiles">
+                            <t t-foreach="dashboard.urgency || []" t-as="tile" t-key="tile.key">
+                                <button type="button"
+                                        t-attf-class="o_unico_wip_tile #{urgencyClass(tile.key)}"
+                                        t-on-click="() => this.openTile(tile)">
+                                    <span class="o_unico_wip_tile_value" t-esc="formatNumber(tile.count)"/>
+                                    <span class="o_unico_wip_tile_label" t-esc="tile.label"/>
+                                    <span class="o_unico_wip_tile_sub" t-esc="formatMoney(tile.value)"/>
+                                </button>
+                            </t>
+                            <t t-if="dashboard.blocked">
+                                <button type="button"
+                                        class="o_unico_wip_tile o_unico_wip_tile_danger"
+                                        t-on-click="() => this.openTile(dashboard.blocked)">
+                                    <span class="o_unico_wip_tile_value"
+                                          t-esc="formatNumber(dashboard.blocked.count)"/>
+                                    <span class="o_unico_wip_tile_label"
+                                          t-esc="dashboard.blocked.label"/>
+                                    <span class="o_unico_wip_tile_sub"
+                                          t-esc="formatMoney(dashboard.blocked.value)"/>
+                                </button>
+                            </t>
+                            <t t-if="dashboard.pinned">
+                                <button type="button"
+                                        class="o_unico_wip_tile o_unico_wip_tile_accent"
+                                        t-on-click="() => this.openTile(dashboard.pinned)">
+                                    <span class="o_unico_wip_tile_value"
+                                          t-esc="formatNumber(dashboard.pinned.count)"/>
+                                    <span class="o_unico_wip_tile_label"
+                                          t-esc="dashboard.pinned.label"/>
+                                    <span class="o_unico_wip_tile_sub"
+                                          t-esc="formatMoney(dashboard.pinned.value)"/>
+                                </button>
+                            </t>
+                        </div>
+                    </section>
+
+                    <section class="o_unico_wip_section">
+                        <h2>Payment Status (Cash Exposure)</h2>
+                        <div class="o_unico_wip_tiles">
+                            <t t-foreach="dashboard.payment || []" t-as="tile" t-key="tile.key">
+                                <button type="button"
+                                        t-attf-class="o_unico_wip_tile #{paymentClass(tile.key)}"
+                                        t-on-click="() => this.openTile(tile)">
+                                    <span class="o_unico_wip_tile_value" t-esc="formatNumber(tile.count)"/>
+                                    <span class="o_unico_wip_tile_label" t-esc="tile.label"/>
+                                    <span class="o_unico_wip_tile_sub" t-esc="formatMoney(tile.value)"/>
+                                </button>
+                            </t>
+                        </div>
+                    </section>
+
+                    <!-- Escalation list: overdue or explicitly flagged. -->
+                    <section class="o_unico_wip_section">
+                        <div class="o_unico_wip_section_head">
+                            <h2>Needs Attention</h2>
+                            <t t-if="dashboard.watchlist and dashboard.watchlist.total > dashboard.watchlist.shown">
+                                <button type="button" class="btn btn-link btn-sm"
+                                        t-on-click="() => this.openWatchlist()">
+                                    View all <t t-esc="dashboard.watchlist.total"/>
+                                </button>
+                            </t>
+                        </div>
+                        <t t-if="!dashboard.watchlist or !dashboard.watchlist.rows.length">
+                            <div class="o_unico_wip_empty">
+                                Nothing overdue or flagged — every order is inside its promise.
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="o_unico_wip_table_wrap">
+                                <table class="o_unico_wip_table">
+                                    <thead>
+                                        <tr>
+                                            <th>Order</th>
+                                            <th>Customer</th>
+                                            <th>Stage</th>
+                                            <th>Supplier / PO</th>
+                                            <th>Expected</th>
+                                            <th>Delay</th>
+                                            <th class="o_unico_wip_num">Value</th>
+                                            <th>Responsible</th>
+                                            <th>Blocker Note</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="dashboard.watchlist.rows" t-as="row" t-key="row.id">
+                                            <tr class="o_unico_wip_row"
+                                                t-on-click="() => this.openOrder(row)">
+                                                <td><strong t-esc="row.name"/></td>
+                                                <td t-esc="row.partner"/>
+                                                <td t-esc="row.stage"/>
+                                                <td>
+                                                    <t t-esc="row.supplier"/>
+                                                    <t t-if="row.po_numbers">
+                                                        <span class="o_unico_wip_muted"
+                                                              t-esc="' · ' + row.po_numbers"/>
+                                                    </t>
+                                                </td>
+                                                <td t-esc="formatDate(row.expected_date)"/>
+                                                <td>
+                                                    <span t-attf-class="o_unico_wip_badge #{row.delay_days > 0 ? 'o_unico_wip_badge_danger' : 'o_unico_wip_badge_warning'}"
+                                                          t-esc="delayLabel(row)"/>
+                                                </td>
+                                                <td class="o_unico_wip_num" t-esc="formatMoney(row.value)"/>
+                                                <td t-esc="row.owner"/>
+                                                <td class="o_unico_wip_note" t-esc="row.note"/>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+                    </section>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

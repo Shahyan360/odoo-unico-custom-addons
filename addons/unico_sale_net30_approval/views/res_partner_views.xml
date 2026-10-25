@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- PO Alert lives in the Sales group of the Sales & Purchase tab, next to
+         the customer's other selling conditions. That group is declared by
+         base.view_partner_form, so inherit it there rather than through one of
+         the other modules that also extends it. -->
+    <record id="res_partner_form_po_alert" model="ir.ui.view">
+        <field name="name">res.partner.form.unico.po-alert</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='sale']" position="inside">
+                <field name="unico_po_alert"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

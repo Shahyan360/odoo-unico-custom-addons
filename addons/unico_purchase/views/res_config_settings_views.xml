@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Default vendor for auto-created special-order RFQs, in Purchase settings. -->
+    <record id="res_config_settings_view_form_unico_purchase" model="ir.ui.view">
+        <field name="name">res.config.settings.form.unico.default.vendor</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="purchase.res_config_settings_view_form_purchase"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@name='purchase_setting_container']" position="inside">
+                <setting id="unico_default_purchase_vendor"
+                         string="Default Vendor (Special Orders)"
+                         help="Vendor used on auto-created RFQs for special-order products that have no vendor on the product.">
+                    <field name="unico_default_purchase_vendor_id"/>
+                </setting>
+                <setting id="unico_default_purchase_user"
+                         string="Default Purchase Representative"
+                         help="User set as Purchase Representative on new RFQs and Purchase Orders instead of the user who created them. Leave empty to keep the creating user.">
+                    <field name="unico_default_purchase_user_id"/>
+                </setting>
+                <setting id="unico_group_rfq_per_source"
+                         string="Group RFQs per source"
+                         help="One draft RFQ per reordering rule (OP) and per sale order (MTO) instead of Odoo's native vendor-level grouping. Buyers can still Merge POs manually.">
+                    <field name="unico_group_rfq_per_source"/>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

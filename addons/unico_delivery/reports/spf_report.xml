@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+         <!-- SPF Report: -->
+        <template id="report_spf">
+            <t t-call="stock.report_picking"/>
+        </template>
+
+        <!-- Reprint handling for the picking report (and the SPF report, which
+             renders it). Two parts:
+
+             1. "Duplicate Copy N" watermark — applied as a REPEATING SVG background
+                on the .page element (see _unico_duplicate_watermark_style). This is
+                the only every-page mechanism that survives wkhtmltopdf here: a fixed
+                body element renders on page 1 only, and footer/header overflow is
+                clipped to its strip. The helper returns "" for the clean first copy.
+
+             2. Page number — the picking report uses the bare web.report_layout, which
+                has no footer of its own, so we add one per doc (position="after",
+                keeping the minimal_layout per-page footer substitution aligned). There
+                is no native footer to duplicate.
+
+             We target the universal ``page`` class, not the 19.0-only
+             ``o_report_stockpicking_operations``, so this loads on every build. -->
+        <template id="report_picking_duplicate_watermark" inherit_id="stock.report_picking">
+            <xpath expr="//div[hasclass('page')]" position="attributes">
+                <attribute name="t-attf-style">#{o._unico_duplicate_watermark_style()}</attribute>
+            </xpath>
+            <xpath expr="//div[hasclass('page')]" position="after">
+                <div class="footer">
+                    <div class="o_footer_content border-top pt-2 text-end text-muted">
+                        <span t-if="report_type == 'pdf'" class="text-nowrap">Page <span class="page"/> / <span class="topage"/></span>
+                    </div>
+                </div>
+            </xpath>
+        </template>
+
+        <record id="action_report_spf" model="ir.actions.report">
+            <field name="name">SPF Report</field>
+            <field name="model">stock.picking</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">unico_delivery.report_spf</field>
+            <field name="report_file">unico_delivery.report_spf</field>
+            <field name="print_report_name">'SPF Report - %s - %s' % (object.partner_id.name or '', object.name)</field>
+            <field name="binding_model_id" ref="stock.model_stock_picking"/>
+            <field name="binding_type">report</field>
+        </record>
+
+    </data>
+</odoo>

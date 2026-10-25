@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Relax the Studio quote-approval rule(s) on sale.order so orders on the
+         Net 30 Days payment term skip approval. Runs on every install/upgrade
+         and is idempotent (see _apply_net30_quote_approval_bypass). -->
+    <function model="studio.approval.rule"
+              name="_apply_net30_quote_approval_bypass"/>
+</odoo>

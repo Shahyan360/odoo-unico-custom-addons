@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Purchase note + stock-shortfall indicator on sale order lines.
+         Shown next to the native stock availability (qty_at_date) widget. -->
+    <record id="sale_order_form_unico_purchase_note" model="ir.ui.view">
+        <field name="name">sale.order.form.unico.purchase.note</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">40</field>
+        <field name="arch" type="xml">
+            <!-- Order-line list: shortfall flag drives the styling/visibility of
+                 the purchase note column. -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_uom_qty']" position="after">
+                <field name="unico_stock_shortfall" column_invisible="True"/>
+                <field name="unico_purchase_note"
+                       string="Purchase Note"
+                       optional="show"
+                       column_invisible="parent.state not in ('draft', 'sent', 'sale')"
+                       readonly="display_type"
+                       placeholder="Required when stock is unavailable"
+                       decoration-danger="unico_stock_shortfall and not unico_purchase_note"/>
+            </xpath>
+
+            <!-- Order-line form dialog: surface the purchase note prominently
+                 whenever there is a shortfall or a note already exists. -->
+            <xpath expr="//field[@name='order_line']/form//field[@name='price_unit']" position="after">
+                <field name="unico_stock_shortfall" invisible="1"/>
+                <field name="unico_purchase_note"
+                       string="Purchase Note"
+                       invisible="display_type or (not unico_stock_shortfall and not unico_purchase_note)"
+                       required="unico_stock_shortfall"
+                       placeholder="Stock is not available for this product. Add a purchase / sourcing note before saving."/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

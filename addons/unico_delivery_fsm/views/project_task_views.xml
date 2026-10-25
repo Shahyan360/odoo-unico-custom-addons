@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_task_form_unico_delivery" model="ir.ui.view">
+        <field name="name">project.task.form.unico.delivery</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <field name="is_rotting" position="after">
+                <field name="unico_is_local_delivery_task" invisible="1"/>
+                <field name="unico_sale_order_id" invisible="1"/>
+                <field name="unico_delivery_picking_count" invisible="1"/>
+                <field name="unico_mrp_production_count" invisible="1"/>
+            </field>
+
+            <span id="end_button_box" position="before">
+                <button name="action_unico_view_sale_order"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-usd"
+                        invisible="not unico_sale_order_id">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Sales Order</span>
+                    </div>
+                </button>
+                <button name="action_unico_view_delivery_pickings"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-truck"
+                        invisible="unico_delivery_picking_count == 0">
+                    <field name="unico_delivery_picking_count" widget="statinfo" string="Delivery"/>
+                </button>
+                <button name="action_unico_view_mrp_productions"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-industry"
+                        invisible="unico_mrp_production_count == 0">
+                    <field name="unico_mrp_production_count" widget="statinfo" string="MO"/>
+                </button>
+            </span>
+
+            <page name="description_page" position="after">
+                <page name="unico_delivery_page"
+                      string="Delivery"
+                      invisible="not unico_is_local_delivery_task">
+                    <group>
+                        <group string="Customer">
+                            <field name="unico_customer_id" readonly="1"/>
+                            <field name="unico_delivery_partner_id" readonly="1"/>
+                            <field name="unico_promised_delivery_datetime" readonly="1"/>
+                            <field name="unico_warehouse_id" readonly="1"/>
+                        </group>
+                        <group string="Quote Delivery Info">
+                            <field name="unico_incoterm_id" readonly="1"/>
+                            <field name="unico_incoterm_location" readonly="1"/>
+                            <field name="unico_shipping_policy" readonly="1"/>
+                            <field name="unico_delivery_status" readonly="1"/>
+                            <field name="unico_effective_delivery_datetime" readonly="1"/>
+                        </group>
+                        <group string="Dispatch">
+                            <field name="unico_driver_id" widget="many2one_avatar_user"/>
+                            <field name="unico_vehicle_id"/>
+                            <field name="unico_photos_required"/>
+                            <field name="unico_signature_required"/>
+                            <field name="unico_actual_delivery_datetime"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Delivery Load">
+                            <field name="unico_delivery_item_count" readonly="1"/>
+                            <field name="unico_product_summary" readonly="1" nolabel="1"/>
+                        </group>
+                        <group string="Operational Links">
+                            <field name="unico_primary_delivery_picking_id" readonly="1"/>
+                            <field name="unico_delivery_picking_ids" readonly="1" widget="many2many_tags"/>
+                            <field name="unico_mrp_production_ids" readonly="1" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                    <group string="Delivery Instructions">
+                        <field name="unico_delivery_instructions" nolabel="1"/>
+                    </group>
+                    <group string="Proof of Delivery">
+                        <field name="unico_pod_attachment_ids" widget="many2many_binary" nolabel="1"/>
+                        <field name="unico_signature" widget="signature"/>
+                    </group>
+                    <group string="Delivery Issue">
+                        <field name="unico_issue_type"/>
+                        <field name="unico_issue_notes" nolabel="1"/>
+                    </group>
+                    <footer>
+                        <button name="action_unico_mark_delivered"
+                                string="Mark Delivered"
+                                type="object"
+                                class="btn-primary"/>
+                        <button name="action_unico_mark_delivery_issue"
+                                string="Mark Issue"
+                                type="object"
+                                class="btn-secondary"/>
+                    </footer>
+                </page>
+            </page>
+        </field>
+    </record>
+
+    <record id="view_task_search_unico_delivery" model="ir.ui.view">
+        <field name="name">project.task.search.unico.delivery</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_search_form"/>
+        <field name="arch" type="xml">
+            <filter name="my_tasks" position="after">
+                <filter string="Local Deliveries"
+                        name="unico_local_deliveries"
+                        domain="[('unico_is_local_delivery_task', '=', True)]"/>
+            </filter>
+            <filter name="user" position="after">
+                <filter string="Vehicle" name="unico_vehicle" context="{'group_by': 'unico_vehicle_id'}"/>
+            </filter>
+        </field>
+    </record>
+
+    <record id="project_task_view_tree_unico_delivery" model="ir.ui.view">
+        <field name="name">project.task.list.unico.delivery</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.project_task_view_tree_main_base"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="unico_promised_delivery_datetime" optional="hide"/>
+                <field name="unico_delivery_item_count" optional="hide"/>
+                <field name="unico_vehicle_id" optional="hide"/>
+            </field>
+        </field>
+    </record>
+</odoo>

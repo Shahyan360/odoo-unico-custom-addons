@@ -1,0 +1,25 @@
+.o_unico_urgency_strip {
+    .o_unico_urgency_tile {
+        min-width: 8rem;
+        background-color: var(--bs-body-bg);
+        transition: background-color 0.15s ease-in-out;
+
+        .o_unico_urgency_caption {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            color: var(--bs-secondary-color);
+        }
+
+        &:hover {
+            background-color: var(--bs-tertiary-bg);
+        }
+    }
+
+    .o_unico_urgency_overdue:hover {
+        border-color: var(--bs-danger) !important;
+    }
+    .o_unico_urgency_urgent:hover {
+        border-color: var(--bs-warning) !important;
+    }
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_view_commission_gp" model="ir.ui.view">
+        <field name="name">product.template.form.commission.gp</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='group_standard_price']" position="after">
+                <group string="Commissionable GP"
+                       groups="unico_commission_gp_reporting.group_unico_commission_gp_manager">
+                    <field name="unico_commission_gp_excluded"/>
+                    <field name="unico_commission_gp_exclusion_note"
+                           invisible="not unico_commission_gp_excluded"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

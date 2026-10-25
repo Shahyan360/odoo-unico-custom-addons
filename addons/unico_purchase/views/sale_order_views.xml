@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Smart buttons: related purchases + units still short to complete the sale. -->
+    <record id="sale_order_form_purchases" model="ir.ui.view">
+        <field name="name">sale.order.form.unico.purchases</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_unico_view_purchases" type="object"
+                        class="oe_stat_button" icon="fa-shopping-cart"
+                        groups="purchase.group_purchase_user,stock.group_stock_user,account.group_account_invoice,account.group_account_readonly"
+                        invisible="unico_purchase_count == 0">
+                    <field name="unico_purchase_count" widget="statinfo" string="Purchases"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Salesperson (user_id) is editable only by Sales Managers; everyone else
+         sees it read-only. -->
+    <record id="sale_order_form_restrict_salesperson" model="ir.ui.view">
+        <field name="name">sale.order.form.unico.restrict.salesperson</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <field name="user_id" position="before">
+                <field name="unico_salesperson_readonly" invisible="1"/>
+            </field>
+            <field name="user_id" position="attributes">
+                <attribute name="readonly">unico_salesperson_readonly</attribute>
+            </field>
+        </field>
+    </record>
+
+</odoo>

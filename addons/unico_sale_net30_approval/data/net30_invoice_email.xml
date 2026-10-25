@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Mail sent automatically when a Net 30 customer invoice is validated
+        (account.move._unico_send_net30_invoice_email).
+
+        Odoo's stock "Invoice: Sending" template (account.email_template_edi_invoice)
+        carries no portal link at all — it just attaches the PDF and asks for
+        payment — so a customer on Net 30 has nowhere to click to pay. This
+        template adds the portal button, which is where Odoo shows both the
+        invoice and the Pay Now option.
+
+        Kept updatable (no noupdate) so an upgrade redeploys this canonical
+        version; the accompanying report attaches the invoice PDF.
+    -->
+    <record id="net30_invoice_email" model="mail.template">
+        <field name="name">Invoice: Net 30 Automatic Send</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="subject">{{ object.company_id.name }} Invoice {{ object.name or '' }} — due {{ format_date(object.invoice_date_due) }}</field>
+        <field name="email_from">{{ (object.invoice_user_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="partner_to">{{ object.partner_id.id }}</field>
+        <field name="report_template_ids" eval="[(4, ref('account.account_invoices'))]"/>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+            <div style="margin:0px;padding:0px;font-size:13px;">
+                <p style="margin:0 0 16px 0;">
+                    Dear
+                    <t t-out="object.partner_id.name or ''">Brandon Freeman</t>,
+                </p>
+                <p style="margin:0 0 16px 0;">
+                    Please find attached invoice
+                    <strong t-out="object.name or ''">INV/2026/00001</strong>
+                    <t t-if="object.invoice_origin">
+                        (order <t t-out="object.invoice_origin or ''">S00001</t>)
+                    </t>
+                    from <t t-out="object.company_id.name or ''">Unico Supply, Inc.</t>,
+                    for <strong t-out="format_amount(object.amount_total, object.currency_id) or ''">$ 1,000.00</strong>.
+                </p>
+                <table cellpadding="6" cellspacing="0" border="0"
+                       style="border-collapse:collapse;font-size:13px;margin:0 0 20px 0;">
+                    <tbody>
+                        <tr>
+                            <td style="padding:4px 16px 4px 0;color:#7f7f7f;">Payment terms</td>
+                            <td style="padding:4px 0;">
+                                <t t-out="object.invoice_payment_term_id.name or ''">Net 30 Days</t>
+                            </td>
+                        </tr>
+                        <tr t-if="object.invoice_date_due">
+                            <td style="padding:4px 16px 4px 0;color:#7f7f7f;">Due date</td>
+                            <td style="padding:4px 0;">
+                                <strong t-out="format_date(object.invoice_date_due) or ''">01/31/2026</strong>
+                            </td>
+                        </tr>
+                        <tr t-if="object.payment_reference">
+                            <td style="padding:4px 16px 4px 0;color:#7f7f7f;">Payment reference</td>
+                            <td style="padding:4px 0;">
+                                <t t-out="object.payment_reference or ''">INV/2026/00001</t>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- The portal page is where the customer both reads the invoice
+                     and gets the Pay Now button, so one link covers both. -->
+                <p style="margin:0 0 20px 0;">
+                    <a t-att-href="object.get_portal_url()"
+                       target="_blank"
+                       style="background-color:#875a7b;color:#ffffff;padding:10px 18px;text-decoration:none;border-radius:5px;display:inline-block;font-weight:bold;">
+                        View Invoice &amp; Pay Online
+                    </a>
+                </p>
+                <p style="margin:0 0 16px 0;">
+                    You can also pay by your usual method, quoting the invoice number.
+                    Do not hesitate to contact us if you have any questions.
+                </p>
+                <t t-if="not is_html_empty(object.invoice_user_id.signature)">
+                    <div style="margin:0 0 16px 0;">--<br/>
+                        <t t-out="object.invoice_user_id.signature or ''">Mitchell Admin</t>
+                    </div>
+                </t>
+                <t t-else="">
+                    <p style="margin:0 0 16px 0;">
+                        Best regards,<br/>
+                        <t t-out="object.company_id.name or ''">Unico Supply, Inc.</t>
+                    </p>
+                </t>
+            </div>
+        </field>
+    </record>
+</odoo>
